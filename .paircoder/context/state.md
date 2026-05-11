@@ -5,9 +5,9 @@
 ## Active Plan
 
 **Plan:** Headway × ThesisCraft — Full Engage Roadmap (Phases A–Y)
-**Status:** Sprint A planned; 10 tasks ready to engage
-**Current Sprint:** A (Foundation) — planned, not yet started
-**Active PairCoder plan:** `plan-2026-05-phase-a-foundation` (story scope, 305 cx, 10 tasks)
+**Status:** Sprint A in progress — TA.1 + TA.2 shipped (2/10); TA.3 unblocked next
+**Current Sprint:** A (Foundation) — in_progress
+**Active PairCoder plan:** `plan-sprint-0-engage` (in_progress, owns all 10 Sprint-A task files). Note: a vestigial `plan-2026-05-phase-a-foundation` exists with 0 linked tasks — safe to delete in a future cleanup.
 
 ## Current Focus
 

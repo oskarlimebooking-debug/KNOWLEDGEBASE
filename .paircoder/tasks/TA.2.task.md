@@ -5,10 +5,11 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: pending
+status: done
 sprint: '0'
 depends_on:
 - TA.1
+completed_at: '2026-05-11T22:39:48.726161'
 ---
 
 # IndexedDB schema + wrappers
