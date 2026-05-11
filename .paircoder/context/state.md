@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-11
+> Last updated: 2026-05-11 (TA.2)
 
 ## Active Plan
 
@@ -64,7 +64,26 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
 - **TA.1 done** (auto-updated by hook)
+
+### Session: 2026-05-11 - TA.2 Driver: IndexedDB schema + wrappers
+
+- Added `src/data/schema.ts` — DB_NAME / DB_VERSION constants + STORES spec (single source of truth for upgrades). Documents the v1 → v2 (Phase I) rename of `books` → `sources` inline.
+- Added `src/data/db.ts` — `openDb` (idempotent singleton, lazy, with onerror/onblocked rejection paths), `closeDb` (HMR-safe), `dbPut`/`dbGet`/`dbGetAll`/`dbGetByIndex`/`dbDelete`, `getSetting<T>`/`setSetting<T>`. ~95 LOC, well under arch limits.
+- Five stores created on first open with indices: `books.addedAt`, `chapters.bookId`, `progress.bookId` + `progress.date`, `generated.chapterId`. Settings store keyed by `key` (not `id`).
+- Added `src/data/db.test.ts` — 25 tests covering: schema constants, store/index creation, idempotent open, reopen-after-close, persistence-across-refresh roundtrip, put/get/overwrite/missing, getAll, getByIndex (bookId / date / chapterId), delete, error propagation (`onerror`, `onblocked`, transaction errors), settings round-trip (primitive, object, overwrite, missing, falsy).
+- Coverage: stmts 100%, branches 92.1%, functions 94.44%, lines 100% — exceeds 90% AC.
+- Added `src/test/setup.ts` with `fake-indexeddb/auto`; vitest now runs coverage via `@vitest/coverage-v8@2.1.9` with threshold gates.
+- Wired `openDb()` into `src/main.ts` at boot (console.error on failure, no UI kill) and `import.meta.hot.dispose(() => closeDb())` so HMR full-page-reloads don't leak the DB connection.
+- HMR smoke test: edited `db.ts`, Vite logged `page reload src/data/db.ts` cleanly — no errors.
+- Verification:
+  - `npm run typecheck` → clean
+  - `npx vitest run --coverage` → 27/27 pass, thresholds green
+  - `npm run build` → 66ms, 8 modules, 2.34 kB main chunk
+  - `npm run dev` → HTTP 200 on `/`, `/src/main.ts`, `/src/data/db.ts`; HMR clean
+  - `bpsai-pair arch check` → no violations on any of: db.ts, schema.ts, db.test.ts, main.ts, setup.ts
+- Open decision resolved inline: chapter-ID format `<bookId>_ch_<index>` (legacy, per data-model.md) — encoded in test fixtures; enforced when TA.4 generates IDs.
 
 ### Session: 2026-05-11 - TA.1 Driver: Vite + TS + PWA scaffold
 
@@ -123,8 +142,8 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 1. ✅ Navigator review pass done (`/pc-plan .paircoder/plans/backlogs/phase-a.md`) → `plan-2026-05-phase-a-foundation`
 2. ✅ TA.1 shipped (Vite + TS + PWA scaffold; all AC met; dev/build/test/preview all green)
-3. TA.2 + TA.3 unlock now. Run them in parallel:
-   - `/start-task TA.2` — IndexedDB schema + wrappers (P0, cx 40)
+3. ✅ TA.2 shipped (IndexedDB v1 + five stores + wrappers + settings; 27 tests; coverage exceeds 90%; HMR clean)
+4. TA.3 unlocks now. TA.4 will unlock once TA.3 ships.
    - `/start-task TA.3` — App shell + view system (P0, cx 25)
 4. Sanity-parse engage version still available: `bpsai-pair engage .paircoder/plans/backlogs/phase-a.md --dry-run`
 5. After Sprint A merges: verify ALL enforcement gates green (see `00-ROADMAP.md`), then engage Sprint B
@@ -135,7 +154,7 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 | Order | Task | Title | Pri | Cx | Depends on |
 |---|---|---|---|---|---|
 | 1 | **TA.1** ✅ | Project skeleton (Vite + TS + PWA scaffold) | P0 | 25 | — |
-| 2 | **TA.2** | IndexedDB schema + wrappers | P0 | 40 | TA.1 |
+| 2 | **TA.2** ✅ | IndexedDB schema + wrappers | P0 | 40 | TA.1 |
 | 3 | TA.3 | App shell + view system | P0 | 25 | TA.1 |
 | 4 | **TA.4** | Add Book flow (PDF + EPUB) | P0 | 65 | TA.2, TA.3 |
 | 5 | TA.5 | Library grid view | P1 | 25 | TA.3, TA.4 |
