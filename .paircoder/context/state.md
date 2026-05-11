@@ -65,7 +65,7 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 ## What Was Just Done
 
 - **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
-- **TA.1 done** (auto-updated by hook)
+- **TA.1 done** — Vite + TS + PWA scaffold
 
 ### Session: 2026-05-11 - TA.2 Driver: IndexedDB schema + wrappers
 
