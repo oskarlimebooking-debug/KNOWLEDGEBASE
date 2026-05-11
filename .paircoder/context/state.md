@@ -64,6 +64,8 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TA.1 done** (auto-updated by hook)
+
 ### Session: 2026-05-11 - TA.1 Driver: Vite + TS + PWA scaffold
 
 - Archived prior Phase-L monolith artifacts (482KB `index.html`, `src/`, `api/`, `scripts/`, `coverage/`, old `package.json` etc.) to `_legacy/phase-l-monolith/`. All untracked — git history unaffected. `_legacy/` added to `.gitignore`.

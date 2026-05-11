@@ -5,9 +5,10 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 5
-status: pending
+status: done
 sprint: '0'
 depends_on: []
+completed_at: '2026-05-11T21:18:52.701314'
 ---
 
 # Project skeleton (Vite + TS + PWA scaffold)
