@@ -1,0 +1,21 @@
+{
+  "name": "headway",
+  "version": "0.1.0",
+  "description": "Headway — personal knowledge platform (READ / RESEARCH / WRITE)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  },
+  "license": "UNLICENSED"
+}

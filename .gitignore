@@ -1,0 +1,42 @@
+# Editor / OS
+.DS_Store
+*.bak
+.vscode/
+.idea/
+
+# Python (legacy PairCoder tooling)
+.venv/
+__pycache__/
+*.pyc
+agent_pack.tgz
+
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+*.log
+
+# Local env
+.env
+.env.local
+.env.*.local
+
+# Archived prior-implementation files (kept on disk, never committed)
+_legacy/
+
+# Claude Code ephemeral worktrees
+.claude/worktrees/
+
+# PairCoder — ephemeral/session data
+.paircoder/data/
+.paircoder/history/
+.paircoder/cache/
+.paircoder/.cli_version
+.paircoder/telemetry/telemetry.jsonl
+.paircoder/telemetry/signals.jsonl
+.paircoder/telemetry/heartbeat
+.paircoder/telemetry/audit.jsonl
+.paircoder/telemetry/session_snapshot.json
+.paircoder/feedback/calibration.json
