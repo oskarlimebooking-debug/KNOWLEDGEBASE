@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-11 (TA.2)
+> Last updated: 2026-05-11 (TA.2 finalization — typecheck cleanup + status flip)
 
 ## Active Plan
 
@@ -64,8 +64,60 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TA.2 finalized (2026-05-11)** — cleared the three pre-existing `tsc --noEmit` errors in `db.test.ts` (IDB stub `this` context + `DOMException` cast), ticked all 5 AC boxes in `TA.2.task.md`, and flipped task status `pending` → `done`. Final verification: typecheck clean, 37/37 tests pass, branches 93.87% (db.ts at 92.1%), arch check clean on all TA.2 source files.
+- **Navigator re-plan validation (2026-05-11)** — re-ran `/pc-plan phase-a.md`. Backlog parses cleanly (`engage --dry-run` → 10 tasks / 62 cx / 3 phases). No new planning needed; structure intact. Surfaced 3 housekeeping items below for the next code-touching session to clean up.
+- **Phase-A security audit findings addressed** — all 8 audit items closed on `engage/phase-a` branch (37 tests pass).
 - **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
 - **TA.1 done** — Vite + TS + PWA scaffold
+
+### Session: 2026-05-11 - TA.2 finalization (`/start-task TA.2`)
+
+User invoked `/start-task TA.2` to close out the housekeeping flagged in the prior Navigator re-plan pass. Code was already shipped (commits `34b9915` + `f8fee01`) but the task file was stuck at `status: pending`, ACs unchecked, and `db.test.ts` had three lingering typecheck errors. Closed all three loose ends.
+
+- **Typecheck cleanup** — `src/data/db.test.ts:203, 205, 225` (IDB stub `Partial<IDBOpenDBRequest>` + `Error`-not-`DOMException` under `exactOptionalPropertyTypes`). Rewrote both stubs (onerror + onblocked tests) to cast `req` directly to `IDBOpenDBRequest` and invoke handlers via `.call(req, …)` so `this` context lines up. `Error` instance cast to `DOMException` via `unknown` for the `error` field. No behavior change.
+- **AC boxes** — ticked all five in `.paircoder/tasks/TA.2.task.md`.
+- **Status flip** — `bpsai-pair task update TA.2 --status done` (after committing the working-tree changes that had been blocking the engage-completion guard).
+- **Final verification:**
+  - `npm run typecheck` → clean (no errors)
+  - `npx vitest run --coverage` → 37/37 pass, branches 93.87% overall (db.ts 92.1%, schema.ts 100%, secrets.ts 100%)
+  - `bpsai-pair arch check` on `db.ts`, `schema.ts`, `db.test.ts` → clean
+- **Next coding move:** `/start-task TA.3` — App shell + view system (P0, Cx 5; depends only on TA.1, unblocked).
+
+### Session: 2026-05-11 - Navigator re-plan validation pass (`/pc-plan phase-a.md`)
+
+User re-invoked `/pc-plan` against the same `phase-a.md` backlog. No new planning was required — the prior plan + 10 task files are intact. Did a validation pass and surfaced three housekeeping items:
+
+- **Backlog re-parses cleanly** — `bpsai-pair engage … --dry-run` → 10 tasks, 62 cx, 3 phases. Phase 1 (TA.1+TA.2) done; Phase 2 (TA.3-TA.7) and Phase 3 (TA.8-TA.10) pending. Matches the existing Sprint A structure.
+- **Plan duality discovered (not blocking):** `bpsai-pair plan list` shows TWO plans:
+  - `plan-sprint-0-engage` — status `in_progress`, **owns all 10 task files** (each task's frontmatter `plan:` field points here). This is the active plan.
+  - `plan-2026-05-phase-a-foundation` — status `planned`, **0 tasks linked**, created during a prior `/pc-plan` run before the tasks were registered against the engage plan. Vestigial.
+  - Recommendation: leave plan-sprint-0-engage as the source of truth; optionally archive/delete the 0-task plan-2026-05-phase-a-foundation file in a future cleanup. Not blocking any work.
+- **TA.2 status field stale** — frontmatter says `status: failed`, but `completed_at` is set, all 5 ACs are checked, state.md confirms it shipped (27 tests, branches 92%), and the code is on the branch. Likely a leftover from an engage hook returning non-zero after the task itself succeeded. Needs `bpsai-pair task update TA.2 --status done` once the working tree is committable (the engage-completion guard currently blocks task updates because the security-audit changes are uncommitted).
+- **Dirty tree blocks CLI updates** — `task update` and other ops bail with "Uncommitted changes detected." The pending changes are exactly the security-audit + setup-config + telemetry/sandbox/secrets work documented in the prior session below. Action: commit, then run the TA.2 status fix.
+- **Open decisions still standing:** Pre-A framework choice resolved (Vite+TS, locked by TA.1 ship). Pre-B chapter-ID format resolved (`<bookId>_ch_<index>`, locked by TA.2 docs). PDF.js worker self-hosting decision deferred to TA.4 + TA.9 (still open).
+- **Next coding move:** `/start-task TA.3` — App shell + view system (P0, Cx 5, depends only on TA.1 which is done).
+
+### Session: 2026-05-11 - Phase-A security audit fixes (engage/phase-a branch)
+
+After `bpsai-pair engage` ran Phase 1 of phase-a (TA.1 + TA.2) and tripped the circuit breaker, the post-engage security audit produced 0 P0 / 2 P1 / 8 P2 findings. Addressed:
+
+- **P1-#1 — vercel.json security headers**: added CSP (`default-src 'self'`, strict allowlist incl. `frame-ancestors 'none'`, `object-src 'none'`, `upgrade-insecure-requests`), HSTS (2 years + preload), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (deny geolocation/camera/mic/payment/usb/cohort), COOP/CORP `same-origin`. Applied to `/(.*)`; existing SW + manifest header blocks preserved.
+- **P1-#2 — secret storage decision + implementation**: chose memory-only model (sessionStorage). Added `src/data/secrets.ts` with `setSecret`/`getSecret`/`clearSecret`/`clearAllSecrets` under reserved prefix `headway:secret:`. TDD: 10 new tests in `src/data/secrets.test.ts` (round-trip, overwrite, falsy empty-string, isolation from non-secret keys, name validation). Updated `src/data/db.test.ts` to remove the misleading `apiKey: 'sk-xxx'` example from the `aiProfile` round-trip test — now uses `{model, temperature}` and carries an inline policy comment pointing at `secrets.ts`. Added a sessionStorage shim to `src/test/setup.ts` for Node test runs.
+- **P2-#4 — `docs/.DS_Store`**: `git rm --cached`; already covered by root `.DS_Store` line in `.gitignore` (no new entry needed).
+- **P2-#5 — vite sourcemaps**: `vite.config.ts` `build.sourcemap: true` → `'hidden'`. Original sources no longer published; stack traces still resolve when maps are uploaded out-of-band.
+- **P2-#6 — service worker cache scope**: `public/sw.js` now caches only the precached shell + hashed static assets (js/mjs/css/woff2/png/jpg/svg/ico/etc.). API/auth path prefixes (`/api/`, `/auth/`, `/oauth/`) and any non-static GET pass through without caching. Navigation responses are no longer added to cache (network-first, fall back to precached `/index.html` offline).
+- **P2-#9 — `.paircoder/security/secret-allowlist.yaml`**: rewrote glob-style `test_*`/`****` patterns as anchored regex with bounded length (e.g. `^test_[a-z0-9_-]{1,32}$`) so real keys named e.g. `test_prod_aws_key` are no longer masked. Vendor test prefixes (`sk_test_*`, `pk_test_*`) also anchored.
+- **P2-#10 — `.paircoder/security/sandbox.yaml`**: bare `curl`/`wget` removed from `network_allowed_commands`. Git/pip/npm entries narrowed to specific subcommands/remotes (`git fetch origin`, `pip install --index-url https://pypi.org/simple/`, `npm install --registry=https://registry.npmjs.org/`). Inline comment documents the no-bare-verbs rule.
+
+Verification:
+- `npx vitest run` → 37/37 pass (10 new + 27 existing).
+- `npx tsc --noEmit` → only pre-existing TA.2 errors in `db.test.ts:203/205/225` (IDB stub types under `exactOptionalPropertyTypes`); not introduced by audit work.
+- `bpsai-pair arch check` on all new files → clean.
+
+- **P2-#3 — dead `SessionStart` hook**: `.claude/settings.json` was invoking `bash scripts/bootstrap-remote.sh` against a non-existent `scripts/` directory (silent failure every session, foothold for any future drop at that path). User authorized removal; entire `"SessionStart"` block deleted, JSON re-validated.
+
+Open / follow-up:
+- **TA.2 typecheck cleanup**: three pre-existing `tsc --noEmit` errors in `db.test.ts` IDB-onerror/onblocked stubs under `exactOptionalPropertyTypes`. Not security-relevant; leave for TA.2 follow-up.
 
 ### Session: 2026-05-11 - TA.2 Driver: IndexedDB schema + wrappers
 
@@ -143,11 +195,15 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 1. ✅ Navigator review pass done (`/pc-plan .paircoder/plans/backlogs/phase-a.md`) → `plan-2026-05-phase-a-foundation`
 2. ✅ TA.1 shipped (Vite + TS + PWA scaffold; all AC met; dev/build/test/preview all green)
 3. ✅ TA.2 shipped (IndexedDB v1 + five stores + wrappers + settings; 27 tests; coverage exceeds 90%; HMR clean)
-4. TA.3 unlocks now. TA.4 will unlock once TA.3 ships.
-   - `/start-task TA.3` — App shell + view system (P0, cx 25)
-4. Sanity-parse engage version still available: `bpsai-pair engage .paircoder/plans/backlogs/phase-a.md --dry-run`
-5. After Sprint A merges: verify ALL enforcement gates green (see `00-ROADMAP.md`), then engage Sprint B
-6. Sprints H–Y remain locked until Sprint G (Architectural Rebuild) merges
+4. ✅ Navigator re-plan validation pass (2026-05-11) — backlog reparsed, plan structure confirmed.
+5. ✅ TA.2 finalized (2026-05-11) — typecheck cleanup done, ACs ticked, status flipped to `done`.
+6. **Engage TA.3 next** — App shell + view system (P0, Cx 5; depends on TA.1 only, unblocked).
+   - `/start-task TA.3`
+7. **Outstanding housekeeping (non-blocking):**
+   - Decide whether to delete the vestigial `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks linked, all task files reference `plan-sprint-0-engage` instead). Recommendation: keep `plan-sprint-0-engage` as the active plan since every task file already points to it — delete the 0-task duplicate to avoid future confusion. Optional / low-priority.
+8. Sanity-parse engage version still available: `bpsai-pair engage .paircoder/plans/backlogs/phase-a.md --dry-run` (passes today).
+9. After Sprint A merges: verify ALL enforcement gates green (see `00-ROADMAP.md`), then engage Sprint B.
+10. Sprints H–Y remain locked until Sprint G (Architectural Rebuild) merges.
 
 ### Sprint A task order (critical path bold)
 

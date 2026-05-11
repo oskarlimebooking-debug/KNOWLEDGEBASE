@@ -200,11 +200,11 @@ describe('error propagation', () => {
     const fakeError = new Error('boom');
     globalThis.indexedDB = {
       open(): IDBOpenDBRequest {
-        const req: Partial<IDBOpenDBRequest> & { error: Error } = { error: fakeError };
+        const req = { error: fakeError as unknown as DOMException } as IDBOpenDBRequest;
         queueMicrotask(() => {
-          req.onerror?.(new Event('error') as Event);
+          req.onerror?.call(req, new Event('error'));
         });
-        return req as IDBOpenDBRequest;
+        return req;
       },
     } as unknown as IDBFactory;
     await closeDb();
@@ -220,11 +220,11 @@ describe('error propagation', () => {
     const real = globalThis.indexedDB;
     globalThis.indexedDB = {
       open(): IDBOpenDBRequest {
-        const req: Partial<IDBOpenDBRequest> = {};
+        const req = {} as IDBOpenDBRequest;
         queueMicrotask(() => {
-          req.onblocked?.(new Event('blocked') as IDBVersionChangeEvent);
+          req.onblocked?.call(req, new Event('blocked') as IDBVersionChangeEvent);
         });
-        return req as IDBOpenDBRequest;
+        return req;
       },
     } as unknown as IDBFactory;
     await closeDb();
