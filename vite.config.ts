@@ -5,7 +5,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'es2022',
-    sourcemap: true,
+    sourcemap: 'hidden',
   },
   server: {
     port: 5173,

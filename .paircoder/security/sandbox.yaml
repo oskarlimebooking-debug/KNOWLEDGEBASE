@@ -37,13 +37,18 @@ sandbox:
   # Timeout for command execution (seconds)
   timeout: 300
 
-  # Allow network for specific commands (overrides network: none)
-  # Commands matching these patterns can access network
+  # Allow network for specific commands (overrides network: none).
+  # Patterns must be anchored prefixes — bare verbs like `curl` would
+  # wholesale-allow any URL, defeating `network: none`. Add narrow
+  # subcommand or host-pinned patterns instead.
   network_allowed_commands:
-    - "git fetch"
-    - "git pull"
-    - "git push"
-    - "pip install"
-    - "npm install"
-    - "curl"
-    - "wget"
+    - "git fetch origin"
+    - "git pull origin"
+    - "git push origin"
+    - "pip install --index-url https://pypi.org/simple/"
+    - "pip install -r requirements.txt"
+    - "npm install --registry=https://registry.npmjs.org/"
+    - "npm ci --registry=https://registry.npmjs.org/"
+    # If `curl`/`wget` must be allowed for a specific host, add a pinned
+    # entry like `curl https://api.github.com/`. Do NOT re-add the bare
+    # verbs — that re-introduces the wholesale bypass.

@@ -16,6 +16,6 @@ phases:
   - TA.8
   - TA.9
   - TA.10
-status: in_progress
+status: planned
 title: Sprint 0
 type: feature

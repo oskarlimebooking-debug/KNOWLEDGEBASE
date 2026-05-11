@@ -244,7 +244,11 @@ describe('getSetting / setSetting', () => {
   });
 
   it('round-trips a complex object value', async () => {
-    const profile = { apiKey: 'sk-xxx', model: 'gemini-2.0' };
+    // NOTE: setSetting is for non-sensitive preferences only. Credentials
+    // (API keys, OAuth tokens) must go through src/data/secrets.ts, which
+    // keeps them in sessionStorage and out of IndexedDB. See phase-A
+    // security audit P1-#2.
+    const profile = { model: 'gemini-2.0', temperature: 0.4 };
     await setSetting('aiProfile', profile);
     expect(await getSetting<typeof profile>('aiProfile')).toEqual(profile);
   });
