@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P1
 complexity: 5
-status: pending
+status: in_progress
 sprint: '0'
 depends_on:
 - TB.1
@@ -18,7 +18,7 @@ Textarea: "Explain what you learned about <chapter>". Submit → `evaluateTeachb
 
 # Acceptance Criteria
 
-- [ ] Submit yields useful feedback (manual A/B vs. a stub response)
-- [ ] Score badge renders with color (red/yellow/green tiers)
-- [ ] Cache lets user revisit their last attempt
-- [ ] Empty input shows inline validation
+- [x] Submit yields useful feedback (manual A/B vs. a stub response)
+- [x] Score badge renders with color (red/yellow/green tiers)
+- [x] Cache lets user revisit their last attempt
+- [x] Empty input shows inline validation

@@ -21,9 +21,10 @@ import {
 import { buildElement, type ShellNode } from './dom';
 import { showFlashcards } from './flashcards-view';
 import { showSummary } from './summary-view';
+import { showTeachback } from './teachback-view';
 import { showToast } from './toast';
 
-export type ChapterMode = 'read' | 'summary' | 'flashcards';
+export type ChapterMode = 'read' | 'summary' | 'flashcards' | 'teachback';
 
 // Callback fired after a summary writes back chapter.difficulty.
 // `app.ts` wires this to a library refresh so the book card's
@@ -121,6 +122,12 @@ export function renderChapter(data: ChapterViewData): ShellNode {
                 attrs: { type: 'button', 'data-mode': 'flashcards', role: 'tab', 'aria-selected': 'false' },
                 children: ['Flashcards'],
               },
+              {
+                tag: 'button',
+                className: 'chapter-view__tab',
+                attrs: { type: 'button', 'data-mode': 'teachback', role: 'tab', 'aria-selected': 'false' },
+                children: ['Teach-Back'],
+              },
             ],
           },
         ],
@@ -209,6 +216,7 @@ function switchTab(pane: HTMLElement, mode: ChapterMode): void {
     pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null,
     pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null,
     pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null,
+    pane.querySelector('.chapter-view__tab[data-mode="teachback"]') as HTMLElement | null,
   ];
   for (const t of tabs) {
     if (t === null) continue;
@@ -227,6 +235,7 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
   const readTab = pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null;
   const summaryTab = pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null;
   const flashcardsTab = pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null;
+  const teachbackTab = pane.querySelector('.chapter-view__tab[data-mode="teachback"]') as HTMLElement | null;
 
   prev?.addEventListener('click', () => {
     if (data.prevId === null || navigateHandler === null) return;
@@ -271,6 +280,11 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
     if (body === null) return;
     switchTab(pane, 'flashcards');
     void showFlashcards(data.chapter, body, { toastContainer });
+  });
+  teachbackTab?.addEventListener('click', () => {
+    if (body === null) return;
+    switchTab(pane, 'teachback');
+    void showTeachback(data.chapter, body, { toastContainer });
   });
 }
 

@@ -82,18 +82,25 @@ Title: {title}
 Content:
 {content}`;
 
-const TEACHBACK_DEFAULT = `You are a Socratic tutor running a teach-back session for the chapter below. Ask the learner to explain the core idea in their own words, then probe their explanation with 2-3 follow-up questions. Be kind, curious, and concrete. Return ONLY a JSON object with this shape:
+const TEACHBACK_DEFAULT = `You are evaluating a learner's teach-back explanation of the chapter below. Compare the learner's explanation against the chapter's core ideas. Be kind but specific. Return ONLY a JSON object with this exact shape (no prose outside the JSON):
 
 {
-  "openingPrompt": "the first question to ask the learner",
-  "followUps": ["3 short follow-up probes, each a single question"],
-  "evaluationRubric": "1-2 sentences describing what a strong explanation covers"
+  "strengths": ["1-5 short bullets of what the learner got right or explained well"],
+  "gaps": ["1-5 short bullets of what they missed, glossed over, or got wrong"],
+  "suggestions": ["1-5 short bullets of concrete next steps to strengthen understanding"],
+  "score": 75
 }
 
-Title: {title}
+- "score" is an integer 0-100 measuring how well the explanation covers the chapter's core ideas (0 = nothing useful, 100 = expert-level coverage).
+- Each bullet must be a single concrete sentence — no nesting, no markdown.
 
-Content:
-{content}`;
+Chapter title: {title}
+
+Chapter content:
+{content}
+
+Learner's explanation:
+{explanation}`;
 
 const FORMAT_TEXT_DEFAULT = `Clean up the raw text below for readability. Fix obvious OCR/PDF artefacts: rejoin words split across line breaks, restore paragraph breaks at sentence boundaries, and remove page-number/header/footer noise. Do not paraphrase, summarize, translate, or change wording — only reformat.
 
