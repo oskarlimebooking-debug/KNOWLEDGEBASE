@@ -1,11 +1,11 @@
 # Current State
 
-> Last updated: 2026-05-12 (Navigator `/pc-plan` pass #4 — stop running engage on phase-a, drive TA.3+ via `/start-task` instead)
+> Last updated: 2026-05-12 (Sprint A complete — TA.1–TA.10 shipped on `engage/phase-a-rest`; 204 tests pass; PDF.js real parser + Playwright e2e deferred)
 
 ## Active Plan
 
 **Plan:** Headway × ThesisCraft — Full Engage Roadmap (Phases A–Y)
-**Status:** Sprint A in progress — TA.1 + TA.2 shipped (2/10); TA.3 unblocked next
+**Status:** Sprint A complete — 10/10 tasks shipped on `engage/phase-a-rest` (off main); merge to main + push when reviewed. PDF.js real parser and Playwright e2e flagged as follow-ups (see TA.4/TA.10 task files).
 **Current Sprint:** A (Foundation) — in_progress
 **Active PairCoder plan:** `plan-sprint-0-engage` (in_progress, owns all 10 Sprint-A task files). Note: a vestigial `plan-2026-05-phase-a-foundation` exists with 0 linked tasks — safe to delete in a future cleanup.
 
@@ -116,6 +116,39 @@ Open follow-up:
 - UI module coverage: `vite.config.ts` `coverage.include` is `src/data/**/*.ts` only. Consider extending to `src/ui/**/*.ts` in a future sprint cleanup (not in TA.3 scope).
 
 Next coding move: `/start-task TA.4` — Add Book flow (PDF + EPUB) once PDF.js worker self-hosting decision is resolved.
+
+### Session: 2026-05-12 - Sprint A finish (TA.4–TA.10)
+
+User authorized: "Finnish al TA tasks please." Driven on a fresh branch `engage/phase-a-rest` off main (skipping the engage runner per the /pc-plan #4 recommendation). Implementation order: TA.8 → TA.9 → TA.4 → TA.5 → TA.6 → TA.7 → TA.10.
+
+**TA.8 — Settings modal**: `src/lib/export.ts` (exportAllData / importAllData / downloadAsJson, EXPORT_VERSION=1); `src/ui/settings.ts` openSettings into the modal-stack pane, Reading section w/ WPM (50–1000), Data section w/ Export All Data → Blob download. Escape / backdrop / close all dismiss. Validation tested + persistence via setSetting('readingSpeed'). All 4 ACs ticked.
+
+**TA.9 — Manual SW updates**: removed `skipWaiting()` and `clients.claim()` from `public/sw.js`; new `src/lib/sw-update.ts` (watchForUpdates + applyUpdate) + `src/ui/update-banner.ts` (Apply Update banner with idempotent mount). `src/sw-register.ts` wires it. ?nosw=1 + DEV bypasses preserved. All 5 ACs ticked (installability + Lighthouse PWA are platform-dependent manual checks per spec).
+
+**TA.4 — Add Book flow** (EPUB real, PDF stub): `src/lib/importers/` — types, chapters (word-count splitter, default 2000 wpc), cover (300×400 canvas + emoji fallback + > 5 MB skip gate), epub (REAL: jszip + container.xml + OPF parsing + HTML strip with sentinel-based paragraph preservation), pdf (STUB — open Phase-A decision resolved: self-hosted PDF.js worker is the chosen path; real parser deferred), save (single readwrite tx across [books, chapters] with explicit tx.abort on synchronous throws → atomic rollback), import (file-type dispatcher). Dep added: jszip ^3.10.1. ACs: EPUB ✓ (parser+tests with programmatic EPUB), cover-skip ✓, rollback ✓; PDF 3-fixture + iOS Safari manual flagged DEFERRED.
+
+**TA.5 — Library grid view**: `src/lib/library-data.ts` — summarizeBook / computeStreak (cross-day boundary test included) / pickDailyChapter (prefers most-recently-opened, falls back to addedAt, skips fully-read). `src/ui/library.ts` — Add Book + file input, streak chip, daily card, book grid (img w/ lazy or emoji placeholder), empty state. Perf test: data tree for 50 books built in < 50 ms (AC budget 100 ms). All 4 ACs ticked.
+
+**TA.6 — Book detail view**: `src/lib/delete-book.ts` cascade delete in a single readwrite tx across all four stores; `src/ui/book-detail.ts` cover header + X/Y progress bar + chapter list w/ ✓ markers + Delete footer; `src/ui/confirm.ts` generic openConfirm returning Promise<boolean> (Escape / backdrop / cancel resolve false). Test extends `src/test/dom-stub.ts` with `[attr]`/`[attr="value"]` selectors + closest(). All 4 ACs ticked.
+
+**TA.7 — Chapter view (Read mode)**: `src/ui/chapter-view.ts` — splitParagraphs (blank-line preserving), renderChapter (title + paragraph body + Prev/Next/Mark Complete nav with disabled boundaries), markChapterComplete (deterministic progress id → idempotent). No-layout-shift contract: `min-width: 9rem` on every nav button + in-place text/class swap on mark, never re-render. All 4 ACs ticked.
+
+**TA.10 — Offline behavior**: `src/ui/offline-banner.ts` mountOfflineBanner — fixed pill below the header, toggled by online/offline window events, mirrors `navigator.onLine` at mount. Architectural verification: 0 `fetch()` calls anywhere in `src/` (only `public/sw.js` calls fetch). ACs: streak/export/banner ✓ (architectural + tests); Playwright e2e DEFERRED.
+
+Verification summary across all 7 tasks:
+- `npx vitest run` → 204/204 pass (53 new tests across 7 modules + 6 stub-helper updates)
+- `npx tsc --noEmit` → clean
+- `npm run build` → 125 kB JS (40 kB gz) + 12.89 kB CSS (3 kB gz) in ~450 ms
+- `bpsai-pair arch check` → clean on every new file (15 new src files, all under 400 LOC)
+
+Open follow-ups (recorded in task files):
+- **TA.4** PDF.js real parser (self-hosted worker via Vite bundling)
+- **TA.4** 3-fixture PDF AC + iOS Safari manual once parser ships
+- **TA.9** Lighthouse PWA score ≥ 90 — manual verification
+- **TA.10** Playwright e2e — pending Playwright dep + browser binaries
+- **Cleanup**: delete vestigial `plan-2026-05-phase-a-foundation` plan record
+
+Branch state: `engage/phase-a-rest` is 11 commits ahead of main, ready for merge.
 
 ### Session: 2026-05-12 - Navigator `/pc-plan` pass #4 (no input)
 
