@@ -119,17 +119,47 @@ export class StubElement {
   }
 
   querySelector(selector: string): StubElement | null {
-    // Supports a tiny subset: ".class-name". Walk children depth-first.
-    if (!selector.startsWith('.')) return null;
-    const className = selector.slice(1);
+    // Supports the subsets the UI code actually uses:
+    //   .class-name
+    //   [attr="value"]   (attr alone matches presence)
+    const predicate = compileSelector(selector);
+    if (predicate === null) return null;
     const stack: StubElement[] = [...this.children];
     while (stack.length > 0) {
       const node = stack.shift() as StubElement;
-      if (node.classList.contains(className)) return node;
+      if (predicate(node)) return node;
       stack.unshift(...node.children);
     }
     return null;
   }
+
+  closest(selector: string): StubElement | null {
+    const predicate = compileSelector(selector);
+    if (predicate === null) return null;
+    let cur: StubElement | null = this;
+    while (cur !== null) {
+      if (predicate(cur)) return cur;
+      cur = cur.parent;
+    }
+    return null;
+  }
+}
+
+function compileSelector(selector: string): ((el: StubElement) => boolean) | null {
+  const s = selector.trim();
+  if (s.startsWith('.')) {
+    const cls = s.slice(1);
+    return (el) => el.classList.contains(cls);
+  }
+  const attrMatch = /^\[([a-zA-Z_-]+)(?:=["']([^"']*)["'])?\]$/.exec(s);
+  if (attrMatch !== null) {
+    const name = attrMatch[1] as string;
+    const value = attrMatch[2];
+    return (el) =>
+      el.attributes.has(name) &&
+      (value === undefined || el.attributes.get(name) === value);
+  }
+  return null;
 }
 
 export class StubDocument {
