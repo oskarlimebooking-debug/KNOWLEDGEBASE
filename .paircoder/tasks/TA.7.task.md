@@ -17,7 +17,7 @@ Header with chapter title. Body: `chapter.content` as paragraphs (no markdown ye
 
 # Acceptance Criteria
 
-- [ ] Paragraph rendering preserves blank lines
-- [ ] Mark Complete writes a `progress` row and updates the button to "Completed"
-- [ ] Prev / Next disabled at boundaries
-- [ ] No layout shift after mark-complete
+- [x] Paragraph rendering preserves blank lines
+- [x] Mark Complete writes a `progress` row and updates the button to "Completed"
+- [x] Prev / Next disabled at boundaries
+- [x] No layout shift after mark-complete

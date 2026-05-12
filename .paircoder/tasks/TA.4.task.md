@@ -18,8 +18,8 @@ Big "+ Add Book" button, file input accepting `.pdf,.epub`. PDFs: PDF.js text ex
 
 # Acceptance Criteria
 
-- [ ] EPUB import: 3-fixture EPUBs (novel / textbook / mixed) all open with title + chapters
-- [ ] PDF import: 3-fixture PDFs (text-only / scanned-text / column-heavy) extract text and chapter-split
-- [ ] PDFs > 5 MB skip cover generation gracefully (no OOM)
-- [ ] Save commits all rows in a single IDB transaction; partial failure rolls back
-- [ ] Manual test passes on iOS Safari with one EPUB
+- [x] EPUB import: 3-fixture EPUBs (novel / textbook / mixed) all open with title + chapters
+- [ ] PDF import: 3-fixture PDFs (text-only / scanned-text / column-heavy) extract text and chapter-split — DEFERRED (PDF parser is a stub; real PDF.js + self-hosted worker is a follow-up)
+- [x] PDFs > 5 MB skip cover generation gracefully (no OOM)
+- [x] Save commits all rows in a single IDB transaction; partial failure rolls back
+- [ ] Manual test passes on iOS Safari with one EPUB — pending TA.5 UI hookup

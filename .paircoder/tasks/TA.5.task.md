@@ -18,7 +18,7 @@ Grid of book cards (cover, title, author, progress %). Click → `setView('book'
 
 # Acceptance Criteria
 
-- [ ] Library renders ≤ 100ms for a 50-book library on a baseline laptop
-- [ ] Empty state shows when library is empty
-- [ ] Daily card surfaces the correct chapter (verify with two-book fixture)
-- [ ] Streak counter increments correctly across midnight boundary (manual test or mocked clock)
+- [x] Library renders ≤ 100ms for a 50-book library on a baseline laptop
+- [x] Empty state shows when library is empty
+- [x] Daily card surfaces the correct chapter (verify with two-book fixture)
+- [x] Streak counter increments correctly across midnight boundary (manual test or mocked clock)

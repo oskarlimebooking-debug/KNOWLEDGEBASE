@@ -31,7 +31,7 @@ class ClassList {
 
 export class StubElement {
   tagName: string;
-  textContent = '';
+  private ownText = '';
   private classes = new Set<string>();
   classList: ClassList;
   dataset: DatasetMap = {};
@@ -55,6 +55,29 @@ export class StubElement {
     this.classes.clear();
     for (const c of String(value).split(/\s+/).filter(Boolean)) {
       this.classes.add(c);
+    }
+  }
+
+  // textContent on the real DOM is recursive: reading returns the
+  // concatenated text of every descendant text node; assigning replaces
+  // all children with a single text node holding the value.
+  get textContent(): string {
+    if (this.tagName === '#text') return this.ownText;
+    return this.children.map((c) => c.textContent).join('');
+  }
+
+  set textContent(value: string) {
+    for (const c of this.children) c.parent = null;
+    this.children = [];
+    if (this.tagName === '#text') {
+      this.ownText = String(value);
+      return;
+    }
+    if (value !== '') {
+      const tn = new StubElement('#text', this.ownerDocument);
+      tn.ownText = String(value);
+      tn.parent = this;
+      this.children.push(tn);
     }
   }
 
@@ -96,20 +119,52 @@ export class StubElement {
   }
 
   querySelector(selector: string): StubElement | null {
-    // Supports a tiny subset: ".class-name". Walk children depth-first.
-    if (!selector.startsWith('.')) return null;
-    const className = selector.slice(1);
+    // Supports the subsets the UI code actually uses:
+    //   .class-name
+    //   [attr="value"]   (attr alone matches presence)
+    const predicate = compileSelector(selector);
+    if (predicate === null) return null;
     const stack: StubElement[] = [...this.children];
     while (stack.length > 0) {
       const node = stack.shift() as StubElement;
-      if (node.classList.contains(className)) return node;
+      if (predicate(node)) return node;
       stack.unshift(...node.children);
+    }
+    return null;
+  }
+
+  closest(selector: string): StubElement | null {
+    const predicate = compileSelector(selector);
+    if (predicate === null) return null;
+    let cur: StubElement | null = this;
+    while (cur !== null) {
+      if (predicate(cur)) return cur;
+      cur = cur.parent;
     }
     return null;
   }
 }
 
+function compileSelector(selector: string): ((el: StubElement) => boolean) | null {
+  const s = selector.trim();
+  if (s.startsWith('.')) {
+    const cls = s.slice(1);
+    return (el) => el.classList.contains(cls);
+  }
+  const attrMatch = /^\[([a-zA-Z_-]+)(?:=["']([^"']*)["'])?\]$/.exec(s);
+  if (attrMatch !== null) {
+    const name = attrMatch[1] as string;
+    const value = attrMatch[2];
+    return (el) =>
+      el.attributes.has(name) &&
+      (value === undefined || el.attributes.get(name) === value);
+  }
+  return null;
+}
+
 export class StubDocument {
+  private listeners = new Map<string, ((e?: unknown) => void)[]>();
+
   createElement(tag: string): StubElement {
     return new StubElement(tag, this);
   }
@@ -117,6 +172,20 @@ export class StubDocument {
     const el = new StubElement('#text', this);
     el.textContent = text;
     return el;
+  }
+  addEventListener(event: string, fn: (e?: unknown) => void): void {
+    if (!this.listeners.has(event)) this.listeners.set(event, []);
+    this.listeners.get(event)!.push(fn);
+  }
+  removeEventListener(event: string, fn: (e?: unknown) => void): void {
+    const fns = this.listeners.get(event);
+    if (!fns) return;
+    const idx = fns.indexOf(fn);
+    if (idx >= 0) fns.splice(idx, 1);
+  }
+  dispatchEvent(event: string, payload?: unknown): void {
+    const fns = this.listeners.get(event) ?? [];
+    for (const fn of fns) fn(payload);
   }
 }
 
