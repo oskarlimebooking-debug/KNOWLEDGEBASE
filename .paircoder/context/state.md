@@ -67,6 +67,8 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TB.5 done (2026-05-12)** — Summary mode. `src/ai/modes/summary.ts` (`loadSummary` via `withGenerationCache('summary', ...)` — first adoption of TB.4 pattern; strict `output_config.format` for `{keyConcepts, summary, difficulty, readingTime}`; writeback of `chapter.difficulty`). `src/ui/summary-view.ts` (loading / error+Retry / success render; XSS-safe via `createTextNode`). Chapter view gets Read | Summary tab toggle. `summarizeBook` now takes chapters and computes `averageDifficulty`; book card renders ★ stars when set; library auto-refreshes after summary writeback. 21 new tests; 315/315 total. TB.4 AC #4 now 1/4 verified.
+
 - **TB.4 done** (auto-updated by hook)
 
 - **TB.4 done (2026-05-12)** — Generation cache pattern. New `src/lib/cache.ts` exports `withGenerationCache(type, fn)` (higher-order read-through wrapper TB.5–TB.8 will reuse), `invalidateGeneration` (TB.6 Regenerate hook), `getCachedGeneration` (read-only inspection), `generationKey` (locks `<type>_<chapterId>` — G-Manual gate, Drive sync depends on it), and frozen `GENERATION_TYPES`. Row shape `{id, chapterId, type, content, createdAt}`. Dev-mode `console.debug('[gen cache] hit|miss <key>')` observability. 14 tests; 291/291 total. AC #4 (adoption by 4 modes) deferred to TB.5–TB.8 per-mode verification. Bundle 258 kB / 76 kB gz — SDK now eagerly bundled; worth a follow-up Vite chunking audit before merge.
