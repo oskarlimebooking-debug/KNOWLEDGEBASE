@@ -1,13 +1,13 @@
 // App entry — assembles the shell, mounts it on the page, and wires
-// the structural event handlers (header back button, settings click,
-// library Add Book + book-card clicks, book detail chapter clicks +
-// delete cascade).
+// the structural event handlers (header back, settings, library Add
+// Book, book-card clicks, book-detail chapter clicks, chapter prev/next).
 //
 // Audit P2-#1 (phase-A): the shell is constructed via the typed data
 // tree in `src/ui/shell.ts` and materialised by `buildElement` in
 // `src/ui/dom.ts` — no `innerHTML` anywhere in the render path.
 
-import { setOnBookDeleted, showBookDetail } from './ui/book-detail';
+import { setChapterClickHandler, setOnBookDeleted, showBookDetail } from './ui/book-detail';
+import { setChapterNavigateHandler, showChapter } from './ui/chapter-view';
 import { buildElement } from './ui/dom';
 import { refreshLibrary, setBookClickHandler } from './ui/library';
 import { openSettings } from './ui/settings';
@@ -56,12 +56,26 @@ export function mountApp(root: HTMLElement | null): void {
 
   const libraryPane = shell.querySelector('.view-library__pane') as HTMLElement | null;
   const bookPane = shell.querySelector('.view-book__pane') as HTMLElement | null;
+  const chapterPane = shell.querySelector('.view-chapter__pane') as HTMLElement | null;
   const modalStack = shell.querySelector('.view-modal-stack__pane') as HTMLElement | null;
   const toastContainer = shell.querySelector('.toast-container') as HTMLElement | null;
 
-  if (libraryPane !== null && bookPane !== null && modalStack !== null && toastContainer !== null) {
+  if (
+    libraryPane !== null &&
+    bookPane !== null &&
+    chapterPane !== null &&
+    modalStack !== null &&
+    toastContainer !== null
+  ) {
     setBookClickHandler((bookId) => {
       void showBookDetail(bookId, bookPane, toastContainer, modalStack);
+    });
+    setChapterClickHandler((_bookId, chapterId) => {
+      void showChapter(chapterId, chapterPane, toastContainer);
+    });
+    setChapterNavigateHandler((_bookId, chapterId) => {
+      setView(shell, 'chapter');
+      void showChapter(chapterId, chapterPane, toastContainer);
     });
     setOnBookDeleted(async () => {
       setView(shell, 'library');
