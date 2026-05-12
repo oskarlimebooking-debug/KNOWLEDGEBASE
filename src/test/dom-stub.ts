@@ -31,7 +31,7 @@ class ClassList {
 
 export class StubElement {
   tagName: string;
-  textContent = '';
+  private ownText = '';
   private classes = new Set<string>();
   classList: ClassList;
   dataset: DatasetMap = {};
@@ -55,6 +55,29 @@ export class StubElement {
     this.classes.clear();
     for (const c of String(value).split(/\s+/).filter(Boolean)) {
       this.classes.add(c);
+    }
+  }
+
+  // textContent on the real DOM is recursive: reading returns the
+  // concatenated text of every descendant text node; assigning replaces
+  // all children with a single text node holding the value.
+  get textContent(): string {
+    if (this.tagName === '#text') return this.ownText;
+    return this.children.map((c) => c.textContent).join('');
+  }
+
+  set textContent(value: string) {
+    for (const c of this.children) c.parent = null;
+    this.children = [];
+    if (this.tagName === '#text') {
+      this.ownText = String(value);
+      return;
+    }
+    if (value !== '') {
+      const tn = new StubElement('#text', this.ownerDocument);
+      tn.ownText = String(value);
+      tn.parent = this;
+      this.children.push(tn);
     }
   }
 
@@ -110,6 +133,8 @@ export class StubElement {
 }
 
 export class StubDocument {
+  private listeners = new Map<string, ((e?: unknown) => void)[]>();
+
   createElement(tag: string): StubElement {
     return new StubElement(tag, this);
   }
@@ -117,6 +142,20 @@ export class StubDocument {
     const el = new StubElement('#text', this);
     el.textContent = text;
     return el;
+  }
+  addEventListener(event: string, fn: (e?: unknown) => void): void {
+    if (!this.listeners.has(event)) this.listeners.set(event, []);
+    this.listeners.get(event)!.push(fn);
+  }
+  removeEventListener(event: string, fn: (e?: unknown) => void): void {
+    const fns = this.listeners.get(event);
+    if (!fns) return;
+    const idx = fns.indexOf(fn);
+    if (idx >= 0) fns.splice(idx, 1);
+  }
+  dispatchEvent(event: string, payload?: unknown): void {
+    const fns = this.listeners.get(event) ?? [];
+    for (const fn of fns) fn(payload);
   }
 }
 

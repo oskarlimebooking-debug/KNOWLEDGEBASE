@@ -6,6 +6,7 @@
 // `src/ui/dom.ts` — no `innerHTML` anywhere in the render path.
 
 import { buildElement } from './ui/dom';
+import { openSettings } from './ui/settings';
 import { renderAppShell } from './ui/shell';
 import { backView } from './ui/view';
 
@@ -15,6 +16,14 @@ let settingsHandler: SettingsHandler | null = null;
 
 export function setSettingsHandler(handler: SettingsHandler): void {
   settingsHandler = handler;
+}
+
+function defaultSettingsHandler(root: HTMLElement): SettingsHandler {
+  return () => {
+    const stack = root.querySelector('.view-modal-stack__pane') as HTMLElement | null;
+    if (!stack) return;
+    void openSettings(stack);
+  };
 }
 
 function wireHeader(root: HTMLElement): void {
@@ -38,5 +47,6 @@ export function mountApp(root: HTMLElement | null): void {
   }
   const shell = buildElement(renderAppShell());
   root.replaceChildren(shell);
+  if (settingsHandler === null) settingsHandler = defaultSettingsHandler(shell);
   wireHeader(shell);
 }

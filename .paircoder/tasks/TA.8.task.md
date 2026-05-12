@@ -18,7 +18,7 @@ Open / close via gear icon. Tabs (or sections): Reading, Data. Reading: reading 
 
 # Acceptance Criteria
 
-- [ ] Settings open/close from the header gear
-- [ ] WPM input persists and validates (numeric, 50–1000)
-- [ ] Export All Data round-trips: import the resulting JSON into a blank profile and the library is identical
-- [ ] No console errors
+- [x] Settings open/close from the header gear
+- [x] WPM input persists and validates (numeric, 50–1000)
+- [x] Export All Data round-trips: import the resulting JSON into a blank profile and the library is identical
+- [x] No console errors
