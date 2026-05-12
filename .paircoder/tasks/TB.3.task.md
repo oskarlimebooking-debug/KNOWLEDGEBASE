@@ -5,10 +5,11 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: in_progress
+status: done
 sprint: '0'
 depends_on:
 - TB.1
+completed_at: '2026-05-12T22:52:16.116521'
 ---
 
 # Pattern-based chapter detection
