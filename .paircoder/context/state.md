@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-11 (TA.2 finalization — typecheck cleanup + status flip)
+> Last updated: 2026-05-12 (TA.2 re-finalize after engage-hook regression — task file restored, all gates green)
 
 ## Active Plan
 
@@ -64,11 +64,28 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TA.2 re-finalized after engage-hook regression (2026-05-12)** — `/start-task TA.2` invoked because the engage TA.1 commit (`e78d481`) had a second time reset `TA.2.task.md` back to `status: pending` with all 5 ACs unticked, even though the code shipped many commits ago. Restored the task file (status → done, all 5 ACs ticked), re-ran full verification — 38/38 tests pass, db.ts branch coverage 92.1% (AC ≥ 90%), typecheck clean, arch check clean on all TA.2 source files. No code changes needed; this was pure task-file recovery. Session entry below.
+- **Navigator re-plan validation pass #3 (2026-05-12)** — re-ran `/pc-plan phase-a.md`. Plan still healthy (10 tasks / 62 cx / 3 phases, parser clean). Surfaced one regression: `TA.2.task.md` status field reverted from `done` (committed) to `failed` (working tree). Plus the 2026-05-12 audit round 2 work is still uncommitted across 12 files. Session entry below.
+- **Phase-A audit round 2 addressed (2026-05-12)** — all 7 findings from the engage-#2 audit closed (38 tests pass). Secrets now in-memory only; innerHTML removed from app shell; CSP and SW tightened; sourcemaps off in prod; paircoder allowlist + Claude deny list hardened. Session entry below.
 - **TA.2 finalized (2026-05-11)** — cleared the three pre-existing `tsc --noEmit` errors in `db.test.ts` (IDB stub `this` context + `DOMException` cast), ticked all 5 AC boxes in `TA.2.task.md`, and flipped task status `pending` → `done`. Final verification: typecheck clean, 37/37 tests pass, branches 93.87% (db.ts at 92.1%), arch check clean on all TA.2 source files.
 - **Navigator re-plan validation (2026-05-11)** — re-ran `/pc-plan phase-a.md`. Backlog parses cleanly (`engage --dry-run` → 10 tasks / 62 cx / 3 phases). No new planning needed; structure intact. Surfaced 3 housekeeping items below for the next code-touching session to clean up.
 - **Phase-A security audit findings addressed** — all 8 audit items closed on `engage/phase-a` branch (37 tests pass).
 - **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
 - **TA.1 done** — Vite + TS + PWA scaffold
+
+### Session: 2026-05-12 - TA.2 re-finalize (`/start-task TA.2`)
+
+User invoked `/start-task TA.2` for the second time because the engage run that produced commit `e78d481` ("task(engage): TA.1 — Project skeleton") wrote `TA.2.task.md` back to its pristine pending shape (status: pending, all five ACs unticked). The code itself — `src/data/db.ts`, `src/data/schema.ts`, `src/data/db.test.ts` — has been on the branch since commit `34b9915` and is unchanged. This session was pure task-file recovery + re-verification.
+
+- **What I touched:** only `.paircoder/tasks/TA.2.task.md` (status: pending → done, all 5 ACs re-ticked) and this state.md entry.
+- **Verification (no code changed):**
+  - `bpsai-pair budget check TA.2` → OK (17,350 tokens, 8.7%, ~$0.05)
+  - `npm run typecheck` → clean
+  - `npx vitest run --coverage` → 38/38 pass (4 app + 9 secrets + 25 db); db.ts branch 92.1%, schema.ts 100%, secrets.ts 85.71% (Phase-A round-2 secrets module, not TA.2 scope)
+  - `bpsai-pair arch check` on `db.ts`, `schema.ts`, `db.test.ts` → all clean
+- **CLI flip note:** `bpsai-pair task update TA.2 --status done` was blocked by the dirty tree (state.md + task file edits in flight, plus the still-uncommitted audit-round-2 working tree). Strategy: commit the recovery + audit-round-2 work in the same commit, then the file's frontmatter (already `status: done`) is the authoritative record. If the CLI is needed for completion-hook side effects, run it post-commit on a clean tree.
+- **Root-cause hypothesis:** the engage runner's "register task file" path appears to re-emit each task file from the backlog template at the start of every `bpsai-pair engage` run, clobbering manually-edited frontmatter (status) and AC checkboxes. This regression has now hit twice (commits `9ef23e0` and again `e78d481`). Worth filing as a bpsai-pair bug post-Sprint-A: the registration step should diff-and-skip when the local file already has a non-default status.
+- **Next coding move:** commit the working tree (this recovery + audit round 2 from 2026-05-12), then `/start-task TA.3`.
 
 ### Session: 2026-05-11 - TA.2 finalization (`/start-task TA.2`)
 
@@ -96,6 +113,35 @@ User re-invoked `/pc-plan` against the same `phase-a.md` backlog. No new plannin
 - **Dirty tree blocks CLI updates** — `task update` and other ops bail with "Uncommitted changes detected." The pending changes are exactly the security-audit + setup-config + telemetry/sandbox/secrets work documented in the prior session below. Action: commit, then run the TA.2 status fix.
 - **Open decisions still standing:** Pre-A framework choice resolved (Vite+TS, locked by TA.1 ship). Pre-B chapter-ID format resolved (`<bookId>_ch_<index>`, locked by TA.2 docs). PDF.js worker self-hosting decision deferred to TA.4 + TA.9 (still open).
 - **Next coding move:** `/start-task TA.3` — App shell + view system (P0, Cx 5, depends only on TA.1 which is done).
+
+### Session: 2026-05-12 - Navigator re-plan validation pass #3 (`/pc-plan phase-a.md`)
+
+User re-invoked `/pc-plan` against `phase-a.md` for the third time. No replanning required — the plan is intact. Validation findings:
+
+- **Plan still healthy** — `bpsai-pair engage … --dry-run` → 10 tasks, 62 cx, 3 phases (Phase 1: TA.1+TA.2; Phase 2: TA.3–TA.7; Phase 3: TA.8–TA.10). All 10 task files exist. `plan-sprint-0-engage` (in_progress) owns all 10.
+- **NEW FINDING — TA.2.task.md status regressed in the working tree**: committed value is `status: done` (commit `9ef23e0` "TA.2: mark done — status flip + state.md cleanup"), but the working tree has reverted it to `status: failed`. `bpsai-pair task list` therefore renders TA.2 as ⏳ pending, contradicting state.md and the commit log. Likely caused by an engage-run hook flipping the field during the post-engage-#2 audit cycle. **Fix:** before the next commit, run `git checkout .paircoder/tasks/TA.2.task.md` to drop the spurious revert. If the working tree gets committed in its current shape, follow up with `bpsai-pair task update TA.2 --status done`.
+- **Uncommitted working tree (12 files, intended)** — all the 2026-05-12 engage-#2 audit round 2 fixes are sitting uncommitted: `.claude/settings.json`, `.paircoder/security/allowlist.yaml`, `public/sw.js`, `src/app.ts`/`app.test.ts`, `src/data/secrets.ts`/`secrets.test.ts`, `src/test/setup.ts`, `vercel.json`, `vite.config.ts`, plus state.md. Recommended commit message scope: "phase-a audit round 2: secrets in-memory + DOM-safe shell + CSP/SW hardening + allowlist tightening". Drop the TA.2 regression first.
+- **Vestigial `plan-2026-05-phase-a-foundation` still present** — 0 tasks linked, status `planned`. Same finding as the prior validation pass. Non-blocking; can be deleted in a future cleanup.
+- **Open decisions standing:** Pre-A and Pre-B locked. PDF.js worker self-hosting still deferred to TA.4 + TA.9.
+- **Next coding move:** commit the audit round 2 work (with TA.2 revert dropped) → `/start-task TA.3` (App shell + view system, P0, Cx 5, depends only on TA.1).
+
+### Session: 2026-05-12 - Phase-A audit round 2 (post-engage-#2)
+
+Engage-run #2 produced a stricter audit (1 P1 + 6 P2). All addressed in the working tree, ready for engage to commit:
+
+- **P1-1 — sessionStorage XSS-exfil risk**: replaced `src/data/secrets.ts` sessionStorage backing with a module-level `Map<string, string>` plus a `pagehide` listener that clears it. Other origin scripts can no longer reach the store via `sessionStorage.getItem` — the only handle is the module export. Dropped the sessionStorage shim from `src/test/setup.ts`. Rewrote `src/data/secrets.test.ts` with `afterEach` reset; added a defense-in-depth test asserting that `setSecret` does not write into sessionStorage. 9 secret tests pass.
+- **P2-1 — `innerHTML` in `src/app.ts:5`**: refactored `mountApp` into three pieces: `renderShell()` returning a typed `ShellNode` data tree (pure data), `buildElement()` materialising it via `createElement` + `createTextNode` (never `innerHTML`/`insertAdjacentHTML`), and `mountApp(root)` which calls `root.replaceChildren(buildElement(renderShell()))`. Updated `src/app.test.ts` to assert shape + a "no HTML-string children" regression guard; tests no longer need a real DOM.
+- **P2-2 — `blob:` in CSP `img-src`**: removed from `vercel.json` since no current flow uses blob URLs. Will re-add if/when image uploads land.
+- **P2-3 — SW caches by extension, not Content-Type**: `public/sw.js` now runs `isContentTypeValid(url, res)` before `cache.put` — extension `.js`/`.mjs` requires `application/javascript|ecmascript`, `.css` requires `text/css`, font/image/manifest extensions each have their own MIME-prefix gate. A future origin handler that mis-serves `text/html` under a `.js` URL no longer poisons the cache.
+- **P2-4 — sourcemap publishing**: `vite.config.ts` `build.sourcemap` flipped from `'hidden'` to `false`. No `.map` files emitted in `dist/`; stack traces will reference minified output. Re-enable to `'hidden'` + Sentry-style upload when an error-aggregator lands.
+- **P2-5 — `env`/`printenv`/`python -c` in `always_allowed`**: moved to `require_review` in `.paircoder/security/allowlist.yaml` with an inline rationale citing the audit. The combined risk (env dumps via `env_passthrough: [GITHUB_TOKEN, TRELLO_API_*]`, arbitrary Python via `-c`) is now gated behind a confirmation step rather than silent.
+- **P2-6 — `.claude/settings.json` deny-list gaps**: added Read/Edit/Write deny patterns for `**/.ssh/**`, `**/*.pem`, `**/*.pfx`, `**/*.p12`, `**/.aws/credentials`, `**/.aws/config`, `**/.config/gcloud/**`, `**/.kube/config`, `**/kubeconfig`, `**/.docker/config.json`. JSON re-validated.
+
+Verification:
+- `npx vitest run` → 38/38 pass (4 app + 9 secrets + 25 db).
+- `npx tsc --noEmit` → clean.
+- `python3 -m json.tool` → both `.claude/settings.json` and `vercel.json` parse.
+- `bpsai-pair arch check` on every touched TS file → clean.
 
 ### Session: 2026-05-11 - Phase-A security audit fixes (engage/phase-a branch)
 
@@ -197,9 +243,13 @@ Open / follow-up:
 3. ✅ TA.2 shipped (IndexedDB v1 + five stores + wrappers + settings; 27 tests; coverage exceeds 90%; HMR clean)
 4. ✅ Navigator re-plan validation pass (2026-05-11) — backlog reparsed, plan structure confirmed.
 5. ✅ TA.2 finalized (2026-05-11) — typecheck cleanup done, ACs ticked, status flipped to `done`.
-6. **Engage TA.3 next** — App shell + view system (P0, Cx 5; depends on TA.1 only, unblocked).
-   - `/start-task TA.3`
-7. **Outstanding housekeeping (non-blocking):**
+6. ✅ Navigator re-plan validation pass #3 (2026-05-12) — plan healthy, no replan needed; TA.2 working-tree regression and uncommitted audit-round-2 fixes flagged.
+7. ✅ TA.2 re-finalized (2026-05-12) — task file restored to `status: done` with all 5 ACs ticked; full verification re-run (38/38 tests, db.ts branch 92.1%, typecheck/arch clean).
+8. **Commit the working tree, then engage TA.3.**
+   - State.md + `.paircoder/tasks/TA.2.task.md` carry the recovery; commit them with the 2026-05-12 audit-round-2 fixes (which may or may not still be in tree — re-check before staging).
+   - Then: `/start-task TA.3` — App shell + view system (P0, Cx 5, depends only on TA.1)
+8. **Outstanding housekeeping (non-blocking):**
+   - Investigate why an engage-run hook is flipping `TA.2.task.md`'s status from `done` back to `failed` in the working tree. Likely the audit-circuit-breaker path tags the task as failed without checking that it was already done. Worth filing as a bpsai-pair bug after Sprint A.
    - Decide whether to delete the vestigial `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks linked, all task files reference `plan-sprint-0-engage` instead). Recommendation: keep `plan-sprint-0-engage` as the active plan since every task file already points to it — delete the 0-task duplicate to avoid future confusion. Optional / low-priority.
 8. Sanity-parse engage version still available: `bpsai-pair engage .paircoder/plans/backlogs/phase-a.md --dry-run` (passes today).
 9. After Sprint A merges: verify ALL enforcement gates green (see `00-ROADMAP.md`), then engage Sprint B.
