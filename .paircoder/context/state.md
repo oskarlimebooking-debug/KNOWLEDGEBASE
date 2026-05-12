@@ -64,6 +64,8 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TA.3 done** (auto-updated by hook)
+
 - **TA.3 done (2026-05-12)** — App shell + view system. New `src/ui/` modules: `dom.ts` (typed ShellNode + buildElement), `view.ts` (setView/backView with module-level back stack), `toast.ts` (showToast with per-kind durations + auto-dismiss), `shell.ts` (full app tree as data — header w/ back/title/settings, four view panes, toast container, spinner). `src/app.ts` re-implemented as orchestrator (mountApp + wireHeader). New `src/test/dom-stub.ts` provides a minimal Document/Element mock for tests (no jsdom dep). 72 tests pass; typecheck/build/arch clean. Mobile-first CSS at 320/768/1280 breakpoints; CLS-zero by design (fixed header height, display-toggled panes, no async content insertion). Session entry below.
 - **Navigator `/pc-plan` pass #4 (2026-05-12)** — survey-only. Phase A is fully planned; nothing new to plan. Identified engage's circuit-breaker root cause (Phase-1 trap on already-shipped TA.1+TA.2) and the third TA.2 task-file regression. Recommendation: stop running engage on `phase-a.md`; drive TA.3–TA.10 manually via `/start-task`. Session entry below.
 - **TA.2 re-finalized after engage-hook regression (2026-05-12)** — `/start-task TA.2` invoked because the engage TA.1 commit (`e78d481`) had a second time reset `TA.2.task.md` back to `status: pending` with all 5 ACs unticked, even though the code shipped many commits ago. Restored the task file (status → done, all 5 ACs ticked), re-ran full verification — 38/38 tests pass, db.ts branch coverage 92.1% (AC ≥ 90%), typecheck clean, arch check clean on all TA.2 source files. No code changes needed; this was pure task-file recovery. Session entry below.

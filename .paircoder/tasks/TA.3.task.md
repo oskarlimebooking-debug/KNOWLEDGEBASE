@@ -5,10 +5,11 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 5
-status: in_progress
+status: done
 sprint: '0'
 depends_on:
 - TA.1
+completed_at: '2026-05-12T10:17:37.721079'
 ---
 
 # App shell + view system
