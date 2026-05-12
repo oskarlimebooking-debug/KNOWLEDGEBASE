@@ -1,9 +1,9 @@
 // Headway service worker — Phase A scaffold.
 // Cache the app shell + static build assets only. Anything that looks
 // like an API call, an HTML fragment, or a user-data fetch is passed
-// through to the network and never enters caches.* — see the audit
-// note (P2-#6): once Phase G/Phase I introduce real fetches, an
-// indefinitely-caching SW would silently retain PII and auth state.
+// through to the network and never enters caches.* — see phase-A audit
+// P2-#6: once Phase G/Phase I introduce real fetches, an indefinitely-
+// caching SW would silently retain PII and auth state.
 // Replaced with a richer SW in TA.9.
 
 const CACHE_VERSION = 'headway-shell-v1';
@@ -21,6 +21,26 @@ function isCacheable(url) {
   if (NEVER_CACHE_PREFIXES.some((p) => url.pathname.startsWith(p))) return false;
   if (SHELL.includes(url.pathname)) return true;
   return STATIC_EXTS.test(url.pathname);
+}
+
+// Audit P2-#3 defense-in-depth: refuse to cache a response unless its
+// `Content-Type` matches the class implied by the URL extension. Without
+// this, a future origin handler that mis-serves text/html under a `.js`
+// URL would poison the cache and break navigation isolation.
+function isContentTypeValid(url, res) {
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  const path = url.pathname;
+  const dot = path.lastIndexOf('.');
+  if (dot < 0) return ct.startsWith('text/html'); // SHELL root ("/")
+  const ext = path.slice(dot + 1).toLowerCase();
+  if (ext === 'js' || ext === 'mjs') return /^(application|text)\/(java|ecma)script\b/.test(ct);
+  if (ext === 'css') return ct.startsWith('text/css');
+  if (/^(woff2?|ttf|otf|eot)$/.test(ext)) return ct.startsWith('font/') || ct.startsWith('application/vnd.ms-fontobject');
+  if (/^(png|jpe?g|gif|webp|avif|svg|ico)$/.test(ext)) return ct.startsWith('image/');
+  if (ext === 'webmanifest') return ct.startsWith('application/manifest+json') || ct.startsWith('application/json');
+  if (ext === 'html') return ct.startsWith('text/html');
+  if (ext === 'json') return ct.startsWith('application/json');
+  return false;
 }
 
 self.addEventListener('install', (event) => {
@@ -57,16 +77,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (!isCacheable(url)) {
-    // API/auth/user-data path — pass through, do not cache.
-    return;
-  }
+  if (!isCacheable(url)) return;
 
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        if (res.ok && res.type === 'basic') {
+        if (res.ok && res.type === 'basic' && isContentTypeValid(url, res)) {
           const copy = res.clone();
           caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
         }

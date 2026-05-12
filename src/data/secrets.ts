@@ -1,20 +1,21 @@
 // In-memory secret store for credentials (AI API keys, OAuth tokens, etc.).
 //
-// Storage model — memory-only via sessionStorage:
-//   * Cleared on tab close. The user re-pastes the key per session.
-//   * Never written to IndexedDB, never to a service-worker cache, never
-//     to localStorage. This is the audit P1-#2 decision (phase-A audit):
-//     "decide between in-memory, crypto.subtle-wrapped, or backend proxy
-//     before TA.5/TA.6 wire it up" — we chose in-memory.
-//   * If a future requirement demands cross-session persistence, replace
-//     this module's body with a WebCrypto AES-GCM wrapper backed by IDB.
-//     Callers do not need to change.
+// Storage model — module-level Map, no persistence:
+//   * Held only in a closure inside this module. Other JS in the origin
+//     cannot reach it via `sessionStorage`/`localStorage`/`indexedDB`/
+//     `document.cookie`. The single avenue is `import { getSecret } from
+//     './secrets'`, which only callers compiled into the bundle have.
+//   * Cleared on `pagehide` so a closed tab leaves nothing behind.
+//   * Decision recorded in phase-A audit P1-#2 + P1-#1: pick in-memory
+//     over crypto.subtle-wrapped IDB or a backend proxy. If a future
+//     requirement demands cross-session persistence, replace this body
+//     with a WebCrypto AES-GCM wrapper backed by IDB — the public API
+//     does not have to change.
 //
 // Convention: `setSetting`/`getSetting` (in db.ts) must NEVER receive a
-// credential — use this module instead. Reserved-prefix entries in
-// sessionStorage isolate secrets from any other consumer.
+// credential. Route every credential through this module.
 
-export const SECRET_PREFIX = 'headway:secret:';
+const store = new Map<string, string>();
 
 function assertName(name: string): void {
   if (!name) throw new Error('secret name must be a non-empty string');
@@ -22,25 +23,26 @@ function assertName(name: string): void {
 
 export function setSecret(name: string, value: string): void {
   assertName(name);
-  sessionStorage.setItem(SECRET_PREFIX + name, value);
+  store.set(name, value);
 }
 
 export function getSecret(name: string): string | undefined {
   assertName(name);
-  const raw = sessionStorage.getItem(SECRET_PREFIX + name);
-  return raw === null ? undefined : raw;
+  return store.get(name);
 }
 
 export function clearSecret(name: string): void {
   assertName(name);
-  sessionStorage.removeItem(SECRET_PREFIX + name);
+  store.delete(name);
 }
 
 export function clearAllSecrets(): void {
-  const toRemove: string[] = [];
-  for (let i = 0; i < sessionStorage.length; i++) {
-    const key = sessionStorage.key(i);
-    if (key !== null && key.startsWith(SECRET_PREFIX)) toRemove.push(key);
-  }
-  for (const key of toRemove) sessionStorage.removeItem(key);
+  store.clear();
+}
+
+// Belt-and-suspenders: even though tab close drops the module, register
+// a listener so that `bfcache`-suspended pages and pages restored from
+// the back-forward cache can't leak state into the next navigation.
+if (typeof addEventListener === 'function') {
+  addEventListener('pagehide', clearAllSecrets);
 }

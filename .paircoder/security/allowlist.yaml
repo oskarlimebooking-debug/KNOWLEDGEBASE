@@ -38,18 +38,26 @@ commands:
     - which
     - pwd
     - echo
-    - env
-    - printenv
 
     # Python read operations
     - python --version
-    - python -c
     - pip list
     - pip show
     - pip freeze
 
   # Commands that require user confirmation
   require_review:
+    # Environment / arbitrary-code surfaces.
+    # `env`/`printenv` dump every variable in `env_passthrough`
+    # (GITHUB_TOKEN, TRELLO_*, etc.) to stdout, and `python -c` runs
+    # arbitrary Python — both are silent-exfil paths if a downstream
+    # consumer (telemetry, hook, plugin) captures stdout. Reviewed,
+    # not blocked, because legitimate use exists; the audit step is
+    # the gate. See phase-A audit P2-#5.
+    - env
+    - printenv
+    - python -c
+
     # Git write operations
     - git push
     - git commit

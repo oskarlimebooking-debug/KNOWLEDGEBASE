@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
-  SECRET_PREFIX,
   clearAllSecrets,
   clearSecret,
   getSecret,
   setSecret,
 } from './secrets';
+
+// secrets.ts holds state in a module-level Map. Tests must reset that
+// map between cases to keep them isolated.
+afterEach(() => {
+  clearAllSecrets();
+});
 
 describe('secret store', () => {
   it('round-trips a value', () => {
@@ -48,25 +53,24 @@ describe('secret store', () => {
     expect(getSecret('b')).toBeUndefined();
   });
 
-  it('clearAllSecrets leaves non-secret sessionStorage entries alone', () => {
-    sessionStorage.setItem('unrelated', 'keep me');
-    setSecret('a', '1');
-    clearAllSecrets();
-    expect(sessionStorage.getItem('unrelated')).toBe('keep me');
-    expect(getSecret('a')).toBeUndefined();
-  });
-
-  it('stores under a reserved prefix so non-secret keys cannot collide', () => {
-    setSecret('foo', 'bar');
-    const matching = Object.keys({ ...Array.from({ length: sessionStorage.length }) })
-      .map((_, i) => sessionStorage.key(i))
-      .filter((k): k is string => typeof k === 'string' && k.startsWith(SECRET_PREFIX));
-    expect(matching).toHaveLength(1);
-  });
-
   it('rejects empty secret names', () => {
     expect(() => setSecret('', 'x')).toThrow();
     expect(() => getSecret('')).toThrow();
     expect(() => clearSecret('')).toThrow();
+  });
+
+  it('does not write secrets into sessionStorage', () => {
+    // Defense-in-depth: prove the new storage model is not a sessionStorage
+    // wrapper. If something else in the test environment populates
+    // sessionStorage, that is fine — we only assert that *we* don't.
+    setSecret('aiApiKey', 'sk-redacted');
+    const ss: Storage | undefined = (globalThis as { sessionStorage?: Storage })
+      .sessionStorage;
+    if (ss !== undefined) {
+      for (let i = 0; i < ss.length; i++) {
+        const key = ss.key(i);
+        if (key !== null) expect(ss.getItem(key)).not.toBe('sk-redacted');
+      }
+    }
   });
 });

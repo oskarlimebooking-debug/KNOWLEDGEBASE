@@ -5,11 +5,10 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: done
+status: pending
 sprint: '0'
 depends_on:
 - TA.1
-completed_at: '2026-05-11T22:39:48.726161'
 ---
 
 # IndexedDB schema + wrappers
@@ -18,8 +17,8 @@ Open DB `ChapterWiseDB` v1 with five stores: `books`, `chapters`, `progress`, `g
 
 # Acceptance Criteria
 
-- [x] DB opens on first run and on refresh
-- [x] All five stores exist with the documented indices
-- [x] Wrappers covered by Vitest unit tests (≥ 90% branch coverage)
-- [x] Settings round-trip cleanly through `getSetting` / `setSetting`
-- [x] No console errors on hot reload
+- [ ] DB opens on first run and on refresh
+- [ ] All five stores exist with the documented indices
+- [ ] Wrappers covered by Vitest unit tests (≥ 90% branch coverage)
+- [ ] Settings round-trip cleanly through `getSetting` / `setSetting`
+- [ ] No console errors on hot reload
