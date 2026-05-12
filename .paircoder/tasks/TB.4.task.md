@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 5
-status: pending
+status: in_progress
 sprint: '0'
 depends_on:
 - TB.1
@@ -17,7 +17,7 @@ Establish the canonical pattern: `loadXContent(chapter)` → `dbGet('generated',
 
 # Acceptance Criteria
 
-- [ ] Pattern documented in `src/lib/cache.ts` (or equivalent) with example
-- [ ] Vitest helper `withGenerationCache(type, fn)` exists and is tested
-- [ ] Cache-miss observability: console log in dev mode shows hit/miss
-- [ ] Pattern adopted by all four B-modes below (verified by code review)
+- [x] Pattern documented in `src/lib/cache.ts` with usage example in the module header (full TB.5-style call site, error handling, retry hook)
+- [x] Vitest helper `withGenerationCache(type, fn)` exists and is tested (14 tests in `cache.test.ts`)
+- [x] Cache-miss observability: `console.debug('[gen cache] hit|miss <key>')` fires when `import.meta.env.DEV === true`; silent in prod
+- [ ] Pattern adopted by all four B-modes below (verified by code review) — DEFERRED to TB.5/TB.6/TB.7/TB.8 — adoption is verified per-mode when each ships
