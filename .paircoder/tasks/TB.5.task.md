@@ -18,7 +18,7 @@ depends_on:
 
 # Acceptance Criteria
 
-- [ ] Summary generates, caches as `summary_<chapterId>`, second open is instant
-- [ ] `chapter.difficulty` written back and visible on library card
-- [ ] Empty state on generation error has a Retry button
-- [ ] No XSS in `summary` body
+- [x] Summary generates, caches as `summary_<chapterId>`, second open is instant
+- [x] `chapter.difficulty` written back and visible on library card
+- [x] Empty state on generation error has a Retry button
+- [x] No XSS in `summary` body
