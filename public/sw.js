@@ -44,13 +44,18 @@ function isContentTypeValid(url, res) {
 }
 
 self.addEventListener('install', (event) => {
+  // No skipWaiting() — TA.9 contract is manual updates only. The new
+  // worker waits until the user clicks "Apply Update" in the page UI,
+  // which postMessages SKIP_WAITING (see the message handler below).
   event.waitUntil(
     caches.open(CACHE_VERSION).then((cache) => cache.addAll(SHELL))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // No clients.claim() — when the user accepts the update, the page
+  // reloads on controllerchange and the new worker naturally takes
+  // over the fresh navigation. Avoid grabbing existing tabs mid-flow.
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
@@ -58,7 +63,6 @@ self.addEventListener('activate', (event) => {
       )
     )
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {

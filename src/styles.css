@@ -329,6 +329,63 @@ body {
   background: var(--accent-2);
 }
 
+/* ---- Update banner ----------------------------------------------- */
+
+.update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--panel);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 110;
+  max-width: 90vw;
+  font-size: 0.9rem;
+}
+
+.update-banner__apply {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.update-banner__apply:hover {
+  background: var(--accent-2);
+}
+
+.update-banner__dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 1.25rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+
+.update-banner__dismiss:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
 /* ---- Spinner ----------------------------------------------------- */
 
 .spinner {
