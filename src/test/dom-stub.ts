@@ -95,6 +95,10 @@ export class StubElement {
     return this.attributes.has(name) ? (this.attributes.get(name) as string) : null;
   }
 
+  removeAttribute(name: string): void {
+    this.attributes.delete(name);
+  }
+
   remove(): void {
     if (this.parent === null) return;
     const idx = this.parent.children.indexOf(this);

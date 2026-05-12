@@ -553,6 +553,181 @@ body {
   }
 }
 
+/* ---- Flashcards mode (TB.7) ------------------------------------- */
+
+.flashcards {
+  display: grid;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  justify-items: center;
+}
+
+.flashcards__counter {
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The stage owns the 3D perspective. Keeping perspective on the
+   container (not the card itself) means only `transform` is animated on
+   the card — composited on the GPU, 60fps on mid-tier mobile (AC #2). */
+.flashcards__stage {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 32rem;
+  /* min-height reserves space so flipping never reflows neighbouring
+     content (no CLS even on long backs). */
+  min-height: 14rem;
+  display: grid;
+}
+
+.flashcards__card {
+  position: relative;
+  width: 100%;
+  min-height: 14rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  /* GPU-only transform; will-change hints the compositor.  Transition
+     applies to transform alone, no layout-affecting properties. */
+  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.flashcards__card--flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcards__card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+}
+
+.flashcards__face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 1.125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flashcards__face--front {
+  font-weight: 600;
+}
+
+.flashcards__face--back {
+  transform: rotateY(180deg);
+  background: var(--bg);
+  border-color: var(--accent);
+}
+
+.flashcards__nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 32rem;
+}
+
+.flashcards__nav-btn {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 1rem;
+  font: inherit;
+  cursor: pointer;
+  min-width: 6rem;
+  transition: background-color 120ms ease;
+}
+
+.flashcards__nav-btn:hover:not([disabled]) {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.flashcards__nav-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flashcards__nav-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.flashcards--loading,
+.flashcards--error {
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.flashcards__spinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+.flashcards__loading-label,
+.flashcards__error-message {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.flashcards__error-message {
+  color: var(--error);
+}
+
+.flashcards__retry {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.flashcards__retry:hover {
+  background: var(--accent-2);
+}
+
+.flashcards__retry:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashcards__card {
+    transition: none;
+  }
+  .flashcards__spinner {
+    animation: none;
+  }
+}
+
 .chapter-view__title {
   margin: 0;
   font-size: 1.5rem;

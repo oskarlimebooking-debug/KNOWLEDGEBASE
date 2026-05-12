@@ -5,11 +5,12 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P1
 complexity: 5
-status: pending
+status: done
 sprint: '0'
 depends_on:
 - TB.1
 - TB.4
+completed_at: '2026-05-12T23:21:58.756348'
 ---
 
 # Flashcards mode
@@ -18,7 +19,7 @@ depends_on:
 
 # Acceptance Criteria
 
-- [ ] Generates ≥ 5 cards; UI displays one at a time
-- [ ] Flip animation runs at 60fps on mid-tier mobile
-- [ ] More cards appends without duplicating fronts
-- [ ] Cache key `flashcards_<chapterId>`
+- [x] Generates ≥ 5 cards; UI displays one at a time
+- [x] Flip animation runs at 60fps on mid-tier mobile
+- [x] More cards appends without duplicating fronts
+- [x] Cache key `flashcards_<chapterId>`

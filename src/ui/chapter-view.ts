@@ -19,10 +19,11 @@ import {
   type ProgressRow,
 } from '../lib/library-data';
 import { buildElement, type ShellNode } from './dom';
+import { showFlashcards } from './flashcards-view';
 import { showSummary } from './summary-view';
 import { showToast } from './toast';
 
-export type ChapterMode = 'read' | 'summary';
+export type ChapterMode = 'read' | 'summary' | 'flashcards';
 
 // Callback fired after a summary writes back chapter.difficulty.
 // `app.ts` wires this to a library refresh so the book card's
@@ -114,6 +115,12 @@ export function renderChapter(data: ChapterViewData): ShellNode {
                 attrs: { type: 'button', 'data-mode': 'summary', role: 'tab', 'aria-selected': 'false' },
                 children: ['Summary'],
               },
+              {
+                tag: 'button',
+                className: 'chapter-view__tab',
+                attrs: { type: 'button', 'data-mode': 'flashcards', role: 'tab', 'aria-selected': 'false' },
+                children: ['Flashcards'],
+              },
             ],
           },
         ],
@@ -201,6 +208,7 @@ function switchTab(pane: HTMLElement, mode: ChapterMode): void {
   const tabs = [
     pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null,
     pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null,
+    pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null,
   ];
   for (const t of tabs) {
     if (t === null) continue;
@@ -218,6 +226,7 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
   const body = pane.querySelector('.chapter-view__body') as HTMLElement | null;
   const readTab = pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null;
   const summaryTab = pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null;
+  const flashcardsTab = pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null;
 
   prev?.addEventListener('click', () => {
     if (data.prevId === null || navigateHandler === null) return;
@@ -257,6 +266,11 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
         if (summaryWritebackHandler !== null) await summaryWritebackHandler();
       },
     });
+  });
+  flashcardsTab?.addEventListener('click', () => {
+    if (body === null) return;
+    switchTab(pane, 'flashcards');
+    void showFlashcards(data.chapter, body, { toastContainer });
   });
 }
 
