@@ -17,7 +17,7 @@ Title, author, cover. "X / Y chapters complete" progress bar. Chapter list with 
 
 # Acceptance Criteria
 
-- [ ] Progress bar reflects IDB state on first render
-- [ ] Delete book cascades: book + chapters + progress + generated rows all removed
-- [ ] Confirmation dialog blocks accidental deletion (Escape cancels)
-- [ ] Cover renders or falls back to placeholder
+- [x] Progress bar reflects IDB state on first render
+- [x] Delete book cascades: book + chapters + progress + generated rows all removed
+- [x] Confirmation dialog blocks accidental deletion (Escape cancels)
+- [x] Cover renders or falls back to placeholder
