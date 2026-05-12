@@ -6,6 +6,7 @@
 
 import { parseEpub } from './epub';
 import { parsePdf, pdfShouldSkipCover } from './pdf';
+import { detectChapterPatterns } from './chapter-detect';
 import { splitIntoChapters } from './chapters';
 import { emojiFromKeyword, generateTextCover } from './cover';
 import { saveImportedBook } from './save';
@@ -46,7 +47,11 @@ export async function importBook(
   const parsed: ParsedBookText =
     source === 'epub' ? await parseEpub(file) : await parsePdf(file);
 
-  const slices = splitIntoChapters(parsed.content, options.wordsPerChapter);
+  // TB.3: try pattern-based chapter detection first; silently fall back
+  // to word-count if no pattern matches ≥ 2 times.
+  const slices =
+    detectChapterPatterns(parsed.content) ??
+    splitIntoChapters(parsed.content, options.wordsPerChapter);
   const bookId = makeBookId();
 
   // PDFs over the size threshold skip canvas cover generation (memory).

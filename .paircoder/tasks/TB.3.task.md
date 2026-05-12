@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: pending
+status: in_progress
 sprint: '0'
 depends_on:
 - TB.1
@@ -17,7 +17,7 @@ depends_on:
 
 # Acceptance Criteria
 
-- [ ] 3-fixture detection: novel ("Chapter 1"), textbook ("Part I"), paper ("Section 3") — all detected without AI
-- [ ] AI title enhancement is a single batched call, not per-chapter
-- [ ] Fallback to word-count is silent (no console warning)
-- [ ] Unit tests with > 10 input variants
+- [x] 3-fixture detection: novel ("Chapter 1"), textbook ("Part I"), paper ("Section 3") — all detected without AI
+- [x] AI title enhancement is a single batched call, not per-chapter
+- [x] Fallback to word-count is silent (no console warning)
+- [x] Unit tests with > 10 input variants (28 tests across no-detection, Chapter/Part/Section/numbered forms, priority order, slice shape, and AI enhancement)
