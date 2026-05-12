@@ -67,6 +67,8 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TB.4 done** (auto-updated by hook)
+
 - **TB.4 done (2026-05-12)** — Generation cache pattern. New `src/lib/cache.ts` exports `withGenerationCache(type, fn)` (higher-order read-through wrapper TB.5–TB.8 will reuse), `invalidateGeneration` (TB.6 Regenerate hook), `getCachedGeneration` (read-only inspection), `generationKey` (locks `<type>_<chapterId>` — G-Manual gate, Drive sync depends on it), and frozen `GENERATION_TYPES`. Row shape `{id, chapterId, type, content, createdAt}`. Dev-mode `console.debug('[gen cache] hit|miss <key>')` observability. 14 tests; 291/291 total. AC #4 (adoption by 4 modes) deferred to TB.5–TB.8 per-mode verification. Bundle 258 kB / 76 kB gz — SDK now eagerly bundled; worth a follow-up Vite chunking audit before merge.
 
 - **TB.3 done** (auto-updated by hook)
