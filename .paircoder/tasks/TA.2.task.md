@@ -9,6 +9,7 @@ status: done
 sprint: '0'
 depends_on:
 - TA.1
+completed_at: '2026-05-12T09:49:06.000979'
 ---
 
 # IndexedDB schema + wrappers
