@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 5
-status: pending
+status: in_progress
 sprint: '0'
 depends_on:
 - TA.1
@@ -17,8 +17,8 @@ Single `<div class="app">` with view classes `view-library`, `view-book`, `view-
 
 # Acceptance Criteria
 
-- [ ] `setView('library' | 'book' | 'chapter')` swaps content with no flicker
-- [ ] Header responds to back-button taps on every non-root view
-- [ ] Toast renders 4 kinds (info / success / warn / error) and auto-dismisses
-- [ ] Layout reflows correctly at 320px, 768px, 1280px widths
-- [ ] No CLS issues per Lighthouse
+- [x] `setView('library' | 'book' | 'chapter')` swaps content with no flicker
+- [x] Header responds to back-button taps on every non-root view
+- [x] Toast renders 4 kinds (info / success / warn / error) and auto-dismisses
+- [x] Layout reflows correctly at 320px, 768px, 1280px widths
+- [x] No CLS issues per Lighthouse

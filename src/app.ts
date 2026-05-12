@@ -1,51 +1,42 @@
-// App shell mount.
+// App entry — assembles the shell, mounts it on the page, and wires
+// the structural event handlers (header back button, settings click).
 //
-// Audit P2-#1 (phase-A): never use `innerHTML`, `insertAdjacentHTML`, or
-// any HTML-string sink for app content. Express the tree as data via
-// `renderShell()` and let `buildElement()` materialise it with
-// `createElement` + `textContent`, so user/AI-generated strings can
-// never be interpreted as markup. If you need to add a node, add it to
-// the data tree — not as a string.
+// Audit P2-#1 (phase-A): the shell is constructed via the typed data
+// tree in `src/ui/shell.ts` and materialised by `buildElement` in
+// `src/ui/dom.ts` — no `innerHTML` anywhere in the render path.
 
-interface ShellNode {
-  tag: string;
-  className?: string;
-  children: ReadonlyArray<ShellNode | string>;
+import { buildElement } from './ui/dom';
+import { renderAppShell } from './ui/shell';
+import { backView } from './ui/view';
+
+type SettingsHandler = () => void;
+
+let settingsHandler: SettingsHandler | null = null;
+
+export function setSettingsHandler(handler: SettingsHandler): void {
+  settingsHandler = handler;
 }
 
-export function renderShell(): ShellNode {
-  return {
-    tag: 'main',
-    className: 'shell',
-    children: [
-      { tag: 'h1', children: ['Headway'] },
-      {
-        tag: 'p',
-        className: 'tagline',
-        children: ['Personal knowledge platform — READ / RESEARCH / WRITE.'],
-      },
-      {
-        tag: 'p',
-        className: 'status',
-        children: ['Phase A scaffold — hello, world.'],
-      },
-    ],
-  };
-}
-
-function buildElement(node: ShellNode): HTMLElement {
-  const el = document.createElement(node.tag);
-  if (node.className !== undefined) el.className = node.className;
-  for (const child of node.children) {
-    if (typeof child === 'string') el.appendChild(document.createTextNode(child));
-    else el.appendChild(buildElement(child));
+function wireHeader(root: HTMLElement): void {
+  const back = root.querySelector('.app-header__back') as HTMLElement | null;
+  const settings = root.querySelector('.app-header__settings') as HTMLElement | null;
+  if (back) {
+    back.addEventListener('click', () => {
+      backView(root);
+    });
   }
-  return el;
+  if (settings) {
+    settings.addEventListener('click', () => {
+      if (settingsHandler !== null) settingsHandler();
+    });
+  }
 }
 
 export function mountApp(root: HTMLElement | null): void {
   if (!root) {
     throw new Error('mountApp: #app root element not found');
   }
-  root.replaceChildren(buildElement(renderShell()));
+  const shell = buildElement(renderAppShell());
+  root.replaceChildren(shell);
+  wireHeader(shell);
 }

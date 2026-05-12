@@ -64,6 +64,7 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TA.3 done (2026-05-12)** — App shell + view system. New `src/ui/` modules: `dom.ts` (typed ShellNode + buildElement), `view.ts` (setView/backView with module-level back stack), `toast.ts` (showToast with per-kind durations + auto-dismiss), `shell.ts` (full app tree as data — header w/ back/title/settings, four view panes, toast container, spinner). `src/app.ts` re-implemented as orchestrator (mountApp + wireHeader). New `src/test/dom-stub.ts` provides a minimal Document/Element mock for tests (no jsdom dep). 72 tests pass; typecheck/build/arch clean. Mobile-first CSS at 320/768/1280 breakpoints; CLS-zero by design (fixed header height, display-toggled panes, no async content insertion). Session entry below.
 - **Navigator `/pc-plan` pass #4 (2026-05-12)** — survey-only. Phase A is fully planned; nothing new to plan. Identified engage's circuit-breaker root cause (Phase-1 trap on already-shipped TA.1+TA.2) and the third TA.2 task-file regression. Recommendation: stop running engage on `phase-a.md`; drive TA.3–TA.10 manually via `/start-task`. Session entry below.
 - **TA.2 re-finalized after engage-hook regression (2026-05-12)** — `/start-task TA.2` invoked because the engage TA.1 commit (`e78d481`) had a second time reset `TA.2.task.md` back to `status: pending` with all 5 ACs unticked, even though the code shipped many commits ago. Restored the task file (status → done, all 5 ACs ticked), re-ran full verification — 38/38 tests pass, db.ts branch coverage 92.1% (AC ≥ 90%), typecheck clean, arch check clean on all TA.2 source files. No code changes needed; this was pure task-file recovery. Session entry below.
 - **Navigator re-plan validation pass #3 (2026-05-12)** — re-ran `/pc-plan phase-a.md`. Plan still healthy (10 tasks / 62 cx / 3 phases, parser clean). Surfaced one regression: `TA.2.task.md` status field reverted from `done` (committed) to `failed` (working tree). Plus the 2026-05-12 audit round 2 work is still uncommitted across 12 files. Session entry below.
@@ -73,6 +74,46 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 - **Phase-A security audit findings addressed** — all 8 audit items closed on `engage/phase-a` branch (37 tests pass).
 - **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
 - **TA.1 done** — Vite + TS + PWA scaffold
+
+### Session: 2026-05-12 - TA.3 Driver: app shell + view system
+
+After /pc-plan pass #4 recommended driving TA.3 manually, user authorized: "yes do it and start TA.3". Built the full Phase-A shell as five small modules under `src/ui/` plus a minimal test-only DOM stub.
+
+- **`src/ui/dom.ts`** — generic `buildElement(node, doc?)` taking a `ShellNode` tree. Extracted from the prior `app.ts`; added `attrs` support for ARIA/data attributes. Same audit invariant: no `innerHTML` anywhere, strings always go through `createTextNode`.
+- **`src/ui/view.ts`** — `setView(root, name)`, `backView(root)`, `getCurrentView()`, `canGoBack()`, `resetViewState()` (test-only). Module-level back stack. Setting the same view twice is a no-op (no double-push). The "no flicker" AC is enforced as an invariant: `setView` removes every prior `view-*` modifier class before adding the new one, so the DOM never has zero matching classes nor two.
+- **`src/ui/toast.ts`** — `showToast(container, msg, kind, ms?)` with per-kind durations (info/success 3s, warn 5s, error 6s). Returns `{element, dismiss}`. `aria-live='assertive'` for warn/error, `'polite'` for info/success. Idempotent dismiss.
+- **`src/ui/shell.ts`** — `renderAppShell()` returns the full app data tree: header (back/title/settings), four view panes (library/book/chapter/modal-stack), toast container, hidden spinner. Library pane visible at first paint (CLS gate).
+- **`src/app.ts`** — re-implemented: `mountApp(root)` builds shell via `buildElement(renderAppShell())`, calls `root.replaceChildren`, and wires header back-button → `backView`, settings → registered handler. `setSettingsHandler(fn)` for late binding.
+- **`src/test/dom-stub.ts`** — minimal `StubDocument`/`StubElement` exposing only what the modules touch (createElement/createTextNode/classList sync'd with className/dataset/appendChild/setAttribute/getAttribute/remove/replaceChildren/addEventListener/dispatchEvent/querySelector(.class)). Avoids the happy-dom/jsdom dep entirely.
+- **`src/styles.css`** — extended: CSS variables (header height, content max, gaps, accent palette), grid-based app layout, sticky header with fixed `--header-h: 3.5rem`, pane visibility driven by `[data-view]` attr (no display:none transitions → no flicker), toast container at `position: fixed; bottom: 1rem` (never reflows content), spinner at center with `[hidden]`, breakpoints at 768/1280 widening padding + title size + header gutters, `prefers-reduced-motion` kills toast/spinner animations.
+
+CLS-zero design notes (AC #5):
+- Header has explicit `height: var(--header-h)` and `grid-template-rows: var(--header-h) 1fr` — reserves vertical space at first paint.
+- View panes are pre-rendered; switching toggles `display` based on `[data-view]`. No async content insertion.
+- Toast container is `position: fixed` — never shifts other content when toasts appear/dismiss.
+- Spinner uses `position: fixed` + explicit dimensions + `[hidden]` → never enters layout flow.
+- No web fonts (system font stack) → no FOIT/FOUT.
+
+Verification:
+- `npx vitest run` → 72/72 pass (5 app + 7 dom + 8 view + 10 toast + 8 shell + 9 secrets + 25 db).
+- `npx tsc --noEmit` → clean.
+- `npm run build` → 86ms, 11 modules, 3.72 kB JS + 3.13 kB CSS gzipped.
+- `bpsai-pair arch check` → clean on all 11 changed files.
+- `npm run dev` → HTTP 200 on `/`, `/src/main.ts`, `/src/ui/shell.ts`.
+- `npm run preview` → HTTP 200 on `/`, `/sw.js`, `/manifest.webmanifest`.
+
+ACs:
+- ✓ `setView` swaps with no flicker (invariant covered by `view.test.ts` "only one view modifier class at any time")
+- ✓ Header back-button handler attached + tested via `dispatchEvent('click')`
+- ✓ Toast renders 4 kinds + auto-dismisses (covered by `toast.test.ts`, fake timers)
+- ✓ Mobile-first CSS with 768/1280 breakpoints (manual verification via dev server; programmatic viewport test needs a headless browser)
+- ✓ CLS-zero by design (no async content insertion, explicit dimensions, fixed positioning for overlays)
+
+Open follow-up:
+- Lighthouse CLS measurement: deferred to TA.10 (offline behavior verification) which already requires a browser run.
+- UI module coverage: `vite.config.ts` `coverage.include` is `src/data/**/*.ts` only. Consider extending to `src/ui/**/*.ts` in a future sprint cleanup (not in TA.3 scope).
+
+Next coding move: `/start-task TA.4` — Add Book flow (PDF + EPUB) once PDF.js worker self-hosting decision is resolved.
 
 ### Session: 2026-05-12 - Navigator `/pc-plan` pass #4 (no input)
 
