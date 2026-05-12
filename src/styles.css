@@ -800,6 +800,38 @@ body {
   background: var(--accent-2);
 }
 
+/* ---- Offline banner --------------------------------------------- */
+
+.offline-banner {
+  position: fixed;
+  top: calc(var(--header-h) + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  z-index: 120;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .offline-banner {
+    animation: fade-in 240ms ease;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translate(-50%, -0.5rem); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* ---- Update banner ----------------------------------------------- */
 
 .update-banner {

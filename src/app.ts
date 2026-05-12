@@ -10,6 +10,7 @@ import { setChapterClickHandler, setOnBookDeleted, showBookDetail } from './ui/b
 import { setChapterNavigateHandler, showChapter } from './ui/chapter-view';
 import { buildElement } from './ui/dom';
 import { refreshLibrary, setBookClickHandler } from './ui/library';
+import { mountOfflineBanner } from './ui/offline-banner';
 import { openSettings } from './ui/settings';
 import { renderAppShell } from './ui/shell';
 import { backView, setView } from './ui/view';
@@ -84,5 +85,9 @@ export function mountApp(root: HTMLElement | null): void {
     void refreshLibrary(libraryPane, toastContainer).catch((err: Error) => {
       console.error('[library] refresh failed', err);
     });
+
+    if (typeof window !== 'undefined') {
+      mountOfflineBanner(shell);
+    }
   }
 }
