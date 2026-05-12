@@ -5,11 +5,12 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P1
 complexity: 5
-status: in_progress
+status: done
 sprint: '0'
 depends_on:
 - TB.1
 - TB.4
+completed_at: '2026-05-12T23:31:23.717064'
 ---
 
 # Teach-Back mode
