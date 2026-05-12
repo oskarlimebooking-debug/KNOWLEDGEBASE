@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-12 (TA.2 re-finalize after engage-hook regression — task file restored, all gates green)
+> Last updated: 2026-05-12 (Navigator `/pc-plan` pass #4 — stop running engage on phase-a, drive TA.3+ via `/start-task` instead)
 
 ## Active Plan
 
@@ -64,6 +64,7 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **Navigator `/pc-plan` pass #4 (2026-05-12)** — survey-only. Phase A is fully planned; nothing new to plan. Identified engage's circuit-breaker root cause (Phase-1 trap on already-shipped TA.1+TA.2) and the third TA.2 task-file regression. Recommendation: stop running engage on `phase-a.md`; drive TA.3–TA.10 manually via `/start-task`. Session entry below.
 - **TA.2 re-finalized after engage-hook regression (2026-05-12)** — `/start-task TA.2` invoked because the engage TA.1 commit (`e78d481`) had a second time reset `TA.2.task.md` back to `status: pending` with all 5 ACs unticked, even though the code shipped many commits ago. Restored the task file (status → done, all 5 ACs ticked), re-ran full verification — 38/38 tests pass, db.ts branch coverage 92.1% (AC ≥ 90%), typecheck clean, arch check clean on all TA.2 source files. No code changes needed; this was pure task-file recovery. Session entry below.
 - **Navigator re-plan validation pass #3 (2026-05-12)** — re-ran `/pc-plan phase-a.md`. Plan still healthy (10 tasks / 62 cx / 3 phases, parser clean). Surfaced one regression: `TA.2.task.md` status field reverted from `done` (committed) to `failed` (working tree). Plus the 2026-05-12 audit round 2 work is still uncommitted across 12 files. Session entry below.
 - **Phase-A audit round 2 addressed (2026-05-12)** — all 7 findings from the engage-#2 audit closed (38 tests pass). Secrets now in-memory only; innerHTML removed from app shell; CSP and SW tightened; sourcemaps off in prod; paircoder allowlist + Claude deny list hardened. Session entry below.
@@ -72,6 +73,23 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 - **Phase-A security audit findings addressed** — all 8 audit items closed on `engage/phase-a` branch (37 tests pass).
 - **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
 - **TA.1 done** — Vite + TS + PWA scaffold
+
+### Session: 2026-05-12 - Navigator `/pc-plan` pass #4 (no input)
+
+User invoked `/pc-plan` with empty input after engage's third circuit-breaker trip suggested "run `/pc-plan` to plan remaining tasks manually". Survey-only Navigator pass — no code changes, no new tasks.
+
+- **Pre-flight clean**: budget no warnings; Trello disabled (designing-and-implementing skill applies).
+- **Plans intact**: `plan-sprint-0-engage` owns all 10 Sprint-A task files; backlog parses to 10 tasks / 62 cx / 3 phases. `plan-2026-05-phase-a-foundation` is still a 0-task vestige — defer cleanup.
+- **Three sources disagree on TA.2** (third occurrence of the same regression):
+  - `TA.2.task.md` committed frontmatter: `status: done`, `completed_at` set, ACs ticked.
+  - `TA.2.task.md` working tree: `status: failed` (lifecycle-hook flip during this session, third time).
+  - `bpsai-pair task list`: ⏳ pending.
+  - Code has been on the branch since `34b9915` (six commits ago).
+- **Engage circuit-breaker root cause confirmed**: Phase 1 of `phase-a.md` is `[TA.1, TA.2]`. Both are shipped, so the runner's "meaningful output" check trips every run before it can advance to Phase 2 (TA.3-TA.7). Engage's recovery suggestion (`/pc-plan`) is misleading — the plan is fine; it's the runner that's stuck.
+- **Working-tree state on the branch**: `TA.2.task.md` reverted to `failed` (third regression) + `plan-sprint-0-engage.plan.yaml` legitimately flipped `planned → in_progress`. Plus untracked `.paircoder/telemetry/`.
+- **Recommendation (Navigator)**: stop running `bpsai-pair engage` on `phase-a.md`. Restore TA.2.task.md to `status: done` in a small bookkeeping commit, then drive **TA.3–TA.10 manually** via per-task `/start-task` invocations. When Sprint A is merged, engage Sprint B fresh on a new branch (`engage/phase-b`) — that escapes the "shipped Phase-1 trap" entirely.
+- **Pre-coding decision still standing for Phase A**: PDF.js worker self-hosting for offline (resolve before TA.4 and TA.9).
+- **Next coding move**: bookkeeping commit (TA.2 status restore + plan-yaml flip), then `/start-task TA.3` — App shell + view system (P0, cx 5; deps only on TA.1 which is done; ACs: `setView` swaps with no flicker, header back button, toast w/ 4 kinds, responsive at 320/768/1280, no CLS regression).
 
 ### Session: 2026-05-12 - TA.2 re-finalize (`/start-task TA.2`)
 
