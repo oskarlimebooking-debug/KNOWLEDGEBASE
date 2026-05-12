@@ -8,6 +8,11 @@
 import { getSetting, setSetting } from '../data/db';
 import { downloadAsJson, exportAllData } from '../lib/export';
 import { buildElement, type ShellNode } from './dom';
+import {
+  buildPromptsSection,
+  loadAllPrompts,
+  wirePromptsSection,
+} from './settings-prompts';
 
 export const WPM_MIN = 50;
 export const WPM_MAX = 1000;
@@ -152,9 +157,13 @@ export async function openSettings(
   doc: Document = document,
 ): Promise<SettingsHandle> {
   const wpm = (await getSetting<number>('readingSpeed')) ?? WPM_DEFAULT;
+  const promptValues = await loadAllPrompts();
   const backdrop = doc.createElement('div');
   backdrop.className = 'modal-backdrop';
   const modal = buildModal(wpm, doc);
+  const body = modal.querySelector('.modal__body') as HTMLElement | null;
+  const promptsSection = buildPromptsSection(promptValues, doc);
+  body?.appendChild(promptsSection);
   backdrop.appendChild(modal);
   stack.appendChild(backdrop);
   stack.setAttribute('aria-hidden', 'false');
@@ -180,6 +189,7 @@ export async function openSettings(
 
   wireWpmInput(modal);
   wireExport(modal, doc);
+  wirePromptsSection(promptsSection);
 
   return { element: modal, close };
 }

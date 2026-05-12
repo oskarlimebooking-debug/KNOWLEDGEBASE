@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: done
+status: failed
 sprint: '0'
 depends_on: []
 completed_at: '2026-05-12T19:25:08.418297'

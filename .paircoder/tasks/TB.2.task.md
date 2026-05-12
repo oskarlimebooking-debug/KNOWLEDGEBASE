@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 5
-status: pending
+status: done
 sprint: '0'
 depends_on: []
 ---
@@ -16,7 +16,7 @@ Default prompts dictionary (one entry per generator: `summary`, `quiz`, `flashca
 
 # Acceptance Criteria
 
-- [ ] All 6 default prompts shipped and editable
-- [ ] Override persists in IDB and survives reload
-- [ ] Reset-to-default deletes the override key
-- [ ] No XSS via prompt content (rendered as `textContent`, never `innerHTML`)
+- [x] All 6 default prompts shipped and editable
+- [x] Override persists in IDB and survives reload
+- [x] Reset-to-default deletes the override key
+- [x] No XSS via prompt content (rendered as `textContent`, never `innerHTML`)
