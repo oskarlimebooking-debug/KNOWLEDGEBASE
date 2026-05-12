@@ -17,7 +17,7 @@ API key field (`type=password` + show/hide toggle). "Test connection" calls `fet
 
 # Acceptance Criteria
 
-- [ ] Key persists in IDB (NOT localStorage)
+- [ ] Key kept in memory only via `src/data/secrets.ts` (per Sprint A audit P1-#2 lock — **NOT** IDB and **NOT** localStorage). User re-enters the key each browser session.
 - [ ] Test connection shows clear success/failure toast
-- [ ] Model dropdown lists Gemini Flash + Pro tiers
-- [ ] Refresh Models hits the live endpoint
+- [ ] Model dropdown lists Claude Opus / Sonnet / Haiku tiers (sourced from `client.models.list()` via `fetchAvailableModels`, with `FALLBACK_MODELS` as the offline fallback)
+- [ ] Refresh Models hits the live `models.list` endpoint

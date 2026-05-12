@@ -21,6 +21,7 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
     "jszip": "^3.10.1"
   }
 }
