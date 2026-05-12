@@ -16,6 +16,9 @@ export interface Chapter {
   index: number;
   title: string;
   content: string;
+  /** Difficulty 1-5, written back by Summary mode (TB.5). Library cards
+   *  show stars derived from per-chapter difficulty across the book. */
+  difficulty?: number;
 }
 
 export interface ImportedBook {

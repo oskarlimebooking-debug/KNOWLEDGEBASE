@@ -19,7 +19,19 @@ import {
   type ProgressRow,
 } from '../lib/library-data';
 import { buildElement, type ShellNode } from './dom';
+import { showSummary } from './summary-view';
 import { showToast } from './toast';
+
+export type ChapterMode = 'read' | 'summary';
+
+// Callback fired after a summary writes back chapter.difficulty.
+// `app.ts` wires this to a library refresh so the book card's
+// averageDifficulty (and thus its star row) re-renders.
+type SummaryWritebackHandler = () => void | Promise<void>;
+let summaryWritebackHandler: SummaryWritebackHandler | null = null;
+export function setSummaryWritebackHandler(fn: SummaryWritebackHandler): void {
+  summaryWritebackHandler = fn;
+}
 
 type NavigateToChapter = (bookId: string, chapterId: string) => void;
 
@@ -85,6 +97,25 @@ export function renderChapter(data: ChapterViewData): ShellNode {
         className: 'chapter-view__header',
         children: [
           { tag: 'h2', className: 'chapter-view__title', children: [data.chapter.title] },
+          {
+            tag: 'div',
+            className: 'chapter-view__tabs',
+            attrs: { role: 'tablist' },
+            children: [
+              {
+                tag: 'button',
+                className: 'chapter-view__tab chapter-view__tab--active',
+                attrs: { type: 'button', 'data-mode': 'read', role: 'tab', 'aria-selected': 'true' },
+                children: ['Read'],
+              },
+              {
+                tag: 'button',
+                className: 'chapter-view__tab',
+                attrs: { type: 'button', 'data-mode': 'summary', role: 'tab', 'aria-selected': 'false' },
+                children: ['Summary'],
+              },
+            ],
+          },
         ],
       },
       { tag: 'div', className: 'chapter-view__body', children: body },
@@ -147,10 +178,46 @@ export async function markChapterComplete(bookId: string, chapterId: string): Pr
   await dbPut(STORE_PROGRESS, row);
 }
 
+function renderBodyParagraphs(body: HTMLElement, chapter: Chapter): void {
+  const paragraphs = splitParagraphs(chapter.content);
+  if (paragraphs.length === 0) {
+    body.replaceChildren(
+      buildElement({
+        tag: 'p',
+        className: 'chapter-view__empty',
+        children: ['(empty chapter)'],
+      }),
+    );
+    return;
+  }
+  body.replaceChildren(
+    ...paragraphs.map((p) =>
+      buildElement({ tag: 'p', className: 'chapter-view__para', children: [p] }),
+    ),
+  );
+}
+
+function switchTab(pane: HTMLElement, mode: ChapterMode): void {
+  const tabs = [
+    pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null,
+    pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null,
+  ];
+  for (const t of tabs) {
+    if (t === null) continue;
+    const isActive = t.getAttribute('data-mode') === mode;
+    t.classList.remove('chapter-view__tab--active');
+    if (isActive) t.classList.add('chapter-view__tab--active');
+    t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  }
+}
+
 function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContainer: HTMLElement): void {
   const prev = pane.querySelector('.chapter-view__prev') as HTMLElement | null;
   const next = pane.querySelector('.chapter-view__next') as HTMLElement | null;
   const mark = pane.querySelector('.chapter-view__mark') as HTMLElement | null;
+  const body = pane.querySelector('.chapter-view__body') as HTMLElement | null;
+  const readTab = pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null;
+  const summaryTab = pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null;
 
   prev?.addEventListener('click', () => {
     if (data.prevId === null || navigateHandler === null) return;
@@ -173,6 +240,23 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
         showToast(toastContainer, `Mark complete failed: ${err.message}`, 'error');
       },
     );
+  });
+
+  // Tab toggle: swap body content between paragraph render and summary view.
+  readTab?.addEventListener('click', () => {
+    if (body === null) return;
+    switchTab(pane, 'read');
+    renderBodyParagraphs(body, data.chapter);
+  });
+  summaryTab?.addEventListener('click', () => {
+    if (body === null) return;
+    switchTab(pane, 'summary');
+    void showSummary(data.chapter, body, {
+      toastContainer,
+      onAfterLoad: async () => {
+        if (summaryWritebackHandler !== null) await summaryWritebackHandler();
+      },
+    });
   });
 }
 

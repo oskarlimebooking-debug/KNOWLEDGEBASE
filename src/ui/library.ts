@@ -51,14 +51,21 @@ async function loadLibraryData(today: string = todayUtc()): Promise<LibraryData>
   const books = await dbGetAll<Book>(STORE_BOOKS);
   const chapters = await dbGetAll<Chapter>(STORE_CHAPTERS);
   const progress = await dbGetAll<ProgressRow>(STORE_PROGRESS);
-  const summaries = books.map((b) => summarizeBook(b, progress));
+  const summaries = books.map((b) =>
+    summarizeBook(b, chapters.filter((c) => c.bookId === b.id), progress),
+  );
   const daily = pickDailyChapter(books, chapters, progress);
   const streak = computeStreak(progress, today);
   return { summaries, daily, streak };
 }
 
+function difficultyStars(level: number): string {
+  const clamped = Math.max(0, Math.min(5, Math.round(level)));
+  return '★'.repeat(clamped) + '☆'.repeat(5 - clamped);
+}
+
 function bookCard(summary: BookSummary): ShellNode {
-  const { book, progressPct } = summary;
+  const { book, progressPct, averageDifficulty } = summary;
   const pct = Math.round(progressPct * 100);
   const cover: ShellNode =
     book.coverDataUrl !== null
@@ -111,6 +118,17 @@ function bookCard(summary: BookSummary): ShellNode {
             ],
           },
           { tag: 'span', className: 'book-card__progress-label', children: [`${pct}%`] },
+          ...(averageDifficulty !== null
+            ? [{
+                tag: 'span',
+                className: 'book-card__difficulty',
+                attrs: {
+                  'aria-label': `Difficulty ${averageDifficulty.toFixed(1)} out of 5`,
+                  'data-difficulty': averageDifficulty.toFixed(2),
+                },
+                children: [difficultyStars(averageDifficulty)],
+              } as ShellNode]
+            : []),
         ],
       },
     ],

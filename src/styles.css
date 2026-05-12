@@ -318,6 +318,14 @@ body {
   color: var(--text-dim);
 }
 
+.book-card__difficulty {
+  display: inline-block;
+  margin-top: 0.125rem;
+  color: var(--accent);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
 .daily-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -394,8 +402,155 @@ body {
 }
 
 .chapter-view__header {
+  display: grid;
+  gap: 0.75rem;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.75rem;
+}
+
+.chapter-view__tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+  justify-self: start;
+}
+
+.chapter-view__tab {
+  background: transparent;
+  color: var(--text-dim);
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.chapter-view__tab:hover {
+  color: var(--text);
+}
+
+.chapter-view__tab--active {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.chapter-view__tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Summary mode (TB.5) ---------------------------------------- */
+
+.summary {
+  display: grid;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.summary__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-dim);
+  font-size: 0.875rem;
+}
+
+.summary__sep {
+  opacity: 0.5;
+}
+
+.summary__difficulty {
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+.summary__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.summary__pill {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.summary__body {
+  display: grid;
+  gap: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.summary__paragraph {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.summary--loading,
+.summary--error {
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.summary__spinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+.summary__loading-label,
+.summary__error-message {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.summary__error-message {
+  color: var(--error);
+}
+
+.summary__retry {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.summary__retry:hover {
+  background: var(--accent-2);
+}
+
+.summary__retry:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summary__spinner {
+    animation: none;
+  }
 }
 
 .chapter-view__title {

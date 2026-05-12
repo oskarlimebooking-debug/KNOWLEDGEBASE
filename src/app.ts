@@ -7,7 +7,11 @@
 // `src/ui/dom.ts` — no `innerHTML` anywhere in the render path.
 
 import { setChapterClickHandler, setOnBookDeleted, showBookDetail } from './ui/book-detail';
-import { setChapterNavigateHandler, showChapter } from './ui/chapter-view';
+import {
+  setChapterNavigateHandler,
+  setSummaryWritebackHandler,
+  showChapter,
+} from './ui/chapter-view';
 import { buildElement } from './ui/dom';
 import { refreshLibrary, setBookClickHandler } from './ui/library';
 import { mountOfflineBanner } from './ui/offline-banner';
@@ -77,6 +81,11 @@ export function mountApp(root: HTMLElement | null): void {
     setChapterNavigateHandler((_bookId, chapterId) => {
       setView(shell, 'chapter');
       void showChapter(chapterId, chapterPane, toastContainer);
+    });
+    setSummaryWritebackHandler(async () => {
+      // A summary writes back `chapter.difficulty`; refresh the library
+      // so the book card's averageDifficulty star row picks it up.
+      await refreshLibrary(libraryPane, toastContainer);
     });
     setOnBookDeleted(async () => {
       setView(shell, 'library');
