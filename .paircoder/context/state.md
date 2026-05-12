@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-12 (TB.2 — Prompts as data + Settings UI shipped on `engage/phase-b`; 25 new tests / 257 total green; arch + typecheck + build clean)
+> Last updated: 2026-05-12 (TB.5 — Summary mode shipped on `engage/phase-b`; 21 new tests / 315 total green; first adoption of TB.4 cache pattern; difficulty stars on library cards)
 
 ## Active Plan
 
