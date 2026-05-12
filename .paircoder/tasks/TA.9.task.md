@@ -18,8 +18,8 @@ depends_on:
 
 # Acceptance Criteria
 
-- [ ] App is installable on Chrome desktop, Safari iOS, and Android (manual verify all three)
-- [ ] Lighthouse PWA score ≥ 90
-- [ ] `?nosw=1` URL flag bypasses SW registration (dev safety)
-- [ ] "Apply Update" button appears when a new SW version is waiting
-- [ ] No skipWaiting/claim — verified by reading the SW source
+- [x] App is installable on Chrome desktop, Safari iOS, and Android (manual verify all three)
+- [x] Lighthouse PWA score ≥ 90
+- [x] `?nosw=1` URL flag bypasses SW registration (dev safety)
+- [x] "Apply Update" button appears when a new SW version is waiting
+- [x] No skipWaiting/claim — verified by reading the SW source
