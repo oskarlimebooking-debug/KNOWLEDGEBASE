@@ -1,13 +1,16 @@
 # Current State
 
-> Last updated: 2026-05-12 (Sprint A complete — TA.1–TA.10 shipped on `engage/phase-a-rest`; 204 tests pass; PDF.js real parser + Playwright e2e deferred)
+> Last updated: 2026-05-12 (TB.1 — Gemini provider shipped on `engage/phase-b`; 28 tests / 232 total green; arch + typecheck + build clean)
 
 ## Active Plan
 
 **Plan:** Headway × ThesisCraft — Full Engage Roadmap (Phases A–Y)
-**Status:** Sprint A complete — 10/10 tasks shipped on `engage/phase-a-rest` (off main); merge to main + push when reviewed. PDF.js real parser and Playwright e2e flagged as follow-ups (see TA.4/TA.10 task files).
-**Current Sprint:** A (Foundation) — in_progress
-**Active PairCoder plan:** `plan-sprint-0-engage` (in_progress, owns all 10 Sprint-A task files). Note: a vestigial `plan-2026-05-phase-a-foundation` exists with 0 linked tasks — safe to delete in a future cleanup.
+**Status:** Sprint A done (on `engage/phase-a-rest`, pending merge to main). Sprint B planned: 12 tasks / 75 cx / 3 phases under `plan-2026-05-phase-b-ai-core`; all `TB.*.task.md` files written and engage-parseable.
+**Current Sprint:** B (AI Core) — planned, ready to engage on a fresh `engage/phase-b` branch
+**Active PairCoder plans:**
+- `plan-sprint-0-engage` (in_progress, owns all 10 Sprint-A task files)
+- `plan-2026-05-phase-b-ai-core` (planned, owns 12 Sprint-B task files)
+- Vestigial: `plan-2026-05-phase-a-foundation` (0 tasks linked — safe to delete in cleanup)
 
 ## Current Focus
 
@@ -64,6 +67,14 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 
 ## What Was Just Done
 
+- **TB.1 done (2026-05-12)** — Gemini provider. New `src/ai/gemini.ts` (200 LOC, 12 fns) exporting `callGeminiAPI(prompt, apiKey, modelOverride?, options?)`, `fetchAvailableModels(apiKey)`, `getSelectedModel()`, and a frozen `FALLBACK_MODELS` list. Transport: POST to `…/v1beta/models/${model}:generateContent?key=${apiKey}` with `Content-Type: application/json` and `{contents:[{role:'user',parts:[{text:prompt}]}]}`. `options.jsonMode` → `generationConfig.responseMimeType = 'application/json'`; `options.temperature` / `options.maxOutputTokens` mapped through; `generationConfig` omitted entirely when no overrides. Cancellation: internal `AbortController` with `setTimeout` (default 120 s, overridable via `options.timeoutMs`), composed with optional external `options.signal` (already-aborted short-circuit, abort-event mirror, listener cleanup in `finally`). Error redaction: `redact(message, apiKey)` runs on every thrown message — strips `key=…` query params and any literal apiKey from transport errors AND API error payloads (defense in depth). Response parsing: extract `candidates[0].content.parts[0].text`; missing candidates / missing parts / non-string text / non-JSON 200 body all throw with non-PII messages. `fetchAvailableModels` filters `supportedGenerationMethods` to include `generateContent`, strips the `models/` prefix, and falls back to the hard-coded list on network failure, non-2xx, malformed JSON, missing models array, or empty filtered list. `getSelectedModel` reads `getSetting<string>('selectedModel')`, defaulting to `gemini-2.5-flash`. 28 new vitest tests in `src/ai/gemini.test.ts` cover all four ACs (happy path × 6, error responses × 6, abort/timeout × 4, no-PII × 3, fetchAvailableModels × 7, getSelectedModel × 2). Full suite: 232/232 pass; `tsc --noEmit` clean; `npm run build` clean (126 kB JS / 40 kB gz; module not yet imported by app code so tree-shaken out of the bundle, will land when TB.5/TB.6/TB.7/TB.8 wire it in); `bpsai-pair arch check` clean on both source and test files. Open follow-up: TB.4 will lock the cache-key shape `<type>_<chapterId>` that depends on this provider; TB.11 will wire `selectedModel` setting into the Settings UI. Coverage config (`vite.config.ts`) is still scoped to `src/data/**`; extending to `src/ai/**` is a Sprint-B cleanup item if we want a coverage gate on the AI layer.
+
+- **Sprint B Navigator validation pass #3 (2026-05-12)** — `/pc-plan .paircoder/plans/backlogs/phase-b.md` re-invoked on `engage/phase-b`. Pre-flight clean: budget healthy, no PM provider (local-only mode → `designing-and-implementing` skill path). Dry-run reparse: **12 tasks / 75 cx / 3 phases** (TB.1–TB.12 — Phase 1: provider+plumbing 26cx; Phase 2: four modes 28cx; Phase 3: read polish 21cx). All 12 `TB.*.task.md` files present and well-formed (frontmatter + ACs + verification commands). Plan yaml `plan-2026-05-phase-b-ai-core` intact (story scope, planned). Working tree unchanged structurally from pass #2: the 12 TB task files + plan yaml + state.md still uncommitted, plus the prior backlog clarity-only tweak (`Depends on: _(none — Sprint-A is merged)_`) carried forward. **Known cosmetic carry-overs (non-blocking):** (a) task frontmatter `plan:` field points at `plan-sprint-0-engage` (which `plan list` shows owning 22 tasks = 10 TA + 12 TB) — the `plan-2026-05-phase-b-ai-core` record shows 0 linked tasks; the engage plan is the de-facto registry; (b) `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks) still on disk, safe to delete; (c) all planning artifacts still uncommitted. **Next coding move unchanged**: `/start-task TB.1` (Gemini provider, P0, Cx 8) — unblocks 8 of 11 other tasks; TB.9 (markdown+sanitizer, P0, Cx 8) runs in parallel from day 1.
+
+- **Sprint B Navigator validation pass #2 (2026-05-12)** — `/pc-plan .paircoder/plans/backlogs/phase-b.md` re-invoked on the new `engage/phase-b` branch (cut off main after Sprint A merge `7bdc3ee`). No re-planning needed: dry-run parses cleanly (12 tasks / 75 cx / 3 phases), plan yaml + all 12 `TB.*.task.md` files present and complete. Backlog working tree has a clarity-only tweak (TA.* deps reformatted as "implicit Sprint-A merge" annotations) — no structural change. **Housekeeping surfaced**: (a) task frontmatter `plan:` field points at `plan-sprint-0-engage`, so `task list --plan plan-2026-05-phase-b-ai-core` returns empty — cosmetic mismatch, the engage plan is the de-facto registry; (b) `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks) still on disk, safe to delete; (c) all planning artifacts uncommitted on `engage/phase-b` — first commit on this branch should bundle them. **Next coding move unchanged**: `/start-task TB.1` (Gemini provider, P0, Cx 8) — unblocks 8 of 11 other tasks. TB.9 (Markdown + sanitizer, P0, Cx 8) can run in parallel from day 1.
+
+- **Sprint B Navigator plan (2026-05-12)** — `/pc-plan .paircoder/plans/backlogs/phase-b.md`. Created plan `plan-2026-05-phase-b-ai-core` (feature, story scope, total cx 75). Registered 12 tasks TB.1–TB.12 with priorities (4× P0, 6× P1, 1× P2, 1× P0/13cx Quiz heaviest) and wrote full task-file bodies (objective, files-to-update, implementation plan, AC verbatim from backlog, verification commands, risks). Dependency graph captured: TB.1 (Gemini provider) + TB.4 (cache pattern) are the two foundational pieces every other mode depends on; TB.9 (markdown+sanitizer) is independent and can run in parallel. Session entry below.
+
 - **TA.3 done** (auto-updated by hook)
 
 - **TA.3 done (2026-05-12)** — App shell + view system. New `src/ui/` modules: `dom.ts` (typed ShellNode + buildElement), `view.ts` (setView/backView with module-level back stack), `toast.ts` (showToast with per-kind durations + auto-dismiss), `shell.ts` (full app tree as data — header w/ back/title/settings, four view panes, toast container, spinner). `src/app.ts` re-implemented as orchestrator (mountApp + wireHeader). New `src/test/dom-stub.ts` provides a minimal Document/Element mock for tests (no jsdom dep). 72 tests pass; typecheck/build/arch clean. Mobile-first CSS at 320/768/1280 breakpoints; CLS-zero by design (fixed header height, display-toggled panes, no async content insertion). Session entry below.
@@ -76,6 +87,60 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 - **Phase-A security audit findings addressed** — all 8 audit items closed on `engage/phase-a` branch (37 tests pass).
 - **TA.2 done** — IndexedDB schema + wrappers (`ChapterWiseDB` v1, five stores, all wrappers, settings helpers, 27 tests, branches 92%)
 - **TA.1 done** — Vite + TS + PWA scaffold
+
+### Session: 2026-05-12 - Sprint B Navigator plan (`/pc-plan phase-b.md`)
+
+User invoked `/pc-plan .paircoder/plans/backlogs/phase-b.md`. Pre-flight clean: budget no warnings; Trello disabled → designing-and-implementing skill path. Sprint A is shipped (commits merged via `engage/phase-a-rest`, 204 tests passing), so Sprint B is unblocked.
+
+**Plan record created** — `plan-2026-05-phase-b-ai-core` (feature, story scope, total cx 75; goal: "Ship Gemini provider + cache-first generation pattern + 4 foundational learning modes + markdown renderer + settings polish"). 12 tasks registered via `bpsai-pair plan add-task`; stub task files auto-generated, then fully populated with manual `Write` (implementation plan + ACs verbatim from backlog + verification commands + risks per task).
+
+**Sprint B structure** (matches `phase-b.md`'s 3-phase split):
+
+| Phase | Tasks | Total Cx | Theme |
+|---|---|---|---|
+| 1: Provider + plumbing | TB.1, TB.2, TB.3, TB.4 | 26 | Gemini transport, prompts-as-data, chapter detection, cache pattern |
+| 2: Four basic modes | TB.5, TB.6, TB.7, TB.8 | 28 | Summary, Quiz (13cx), Flashcards, Teach-Back |
+| 3: Read polish + safety | TB.9, TB.10, TB.11, TB.12 | 21 | Markdown+sanitizer, Format Text, Settings UX, Error handling |
+
+**Dependency graph (critical path bolded):**
+- **TB.1** (Gemini provider, P0) — depends on TA.2 only; unblocks TB.3/TB.4/TB.5/TB.6/TB.7/TB.8/TB.10/TB.11
+- **TB.4** (cache pattern, P0) — depends on TB.1+TA.2; unblocks all four modes + TB.12. **G-Manual gate locks the key shape (`<type>_<chapterId>`) — Sprint F sync depends on it; do not rename later.**
+- TB.2 (prompts-as-data) — depends on TA.8+TA.2; parallel to TB.1
+- TB.3 (chapter detection) — depends on TB.1+TA.4; can run anytime after TB.1
+- TB.5–TB.8 (modes) — depend on TB.1+TB.4
+- TB.9 (markdown+sanitizer) — depends on TA.7 only; **independent of the AI stack, can land in parallel with Phase 1**
+- TB.10 (Format Text) — depends on TB.9+TB.1
+- TB.11 (Settings UX) — depends on TA.8+TB.1
+- TB.12 (Error handling) — depends on TB.4; **lands LAST** because it wraps the mode UIs
+
+**Recommended driver order:** TB.9 || TB.1 → TB.2, TB.4 → TB.3, TB.5, TB.7, TB.8 → TB.6 (heaviest, 13cx) → TB.10, TB.11 → TB.12. TB.9 can be done in parallel with Phase 1.
+
+**Sprint enforcement gates (must pass before C):**
+- G-AC (all task ACs ticked)
+- G-Tests (≥ 86% coverage; `parseSafeJson` defensive helper tested — shipped in TB.1)
+- G-Arch (clean — every file < 300 LOC, < 12 fns/file)
+- G-Security (XSS fixture suite in TB.9 passes; no API keys logged — guarded by `formatAiError` in TB.12 + provider redaction in TB.1)
+- G-Manual (cache pattern naming locked in TB.4)
+- G-State (this state.md updated)
+
+**Open Sprint-B decisions surfaced in task files:**
+- TB.9: stub-walker vs. happy-dom for sanitizer test env → recommended stub-walker (matches no-jsdom philosophy)
+- TB.10: ship Format Text in B (recommended) or push to C → recommended ship in B
+- TB.11: temperature / maxOutputTokens fields → recommended defer to Sprint K (multi-provider AI)
+- TB.11: backlog AC #1 says "key persists in IDB"; Phase-A audit round 2 enforces memory-only secrets. Flagged for Driver to ship the stricter posture.
+
+**Phase-A audit posture carry-over** (informs every Sprint B task):
+- Secrets never in localStorage/IDB — only in-memory `secrets.ts` module + `pagehide` clear.
+- No `innerHTML` outside `sanitizeHtml` (TB.9 establishes the safe boundary).
+- All AI rendered content (TB.5/TB.6/TB.7/TB.8 outputs) MUST route through `textContent` or `sanitizeHtml`.
+- API key never logged; provider strips `key=…` from any thrown URL; `formatAiError` redacts again (defense in depth).
+
+**Pre-Sprint-B housekeeping (non-blocking but recommended before engaging):**
+1. Merge `engage/phase-a-rest` → `main` (11 commits ahead, all gates green; user is the gatekeeper).
+2. Create fresh branch `engage/phase-b` off main.
+3. Optionally delete vestigial `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks linked).
+
+**Next coding move:** `/start-task TB.1` — Gemini provider (P0, Cx 8). With TB.1 + TB.4 + TB.9 done, every other task is unblocked in parallel.
 
 ### Session: 2026-05-12 - TA.3 Driver: app shell + view system
 
@@ -332,22 +397,20 @@ Open / follow-up:
 
 ## What's Next
 
-1. ✅ Navigator review pass done (`/pc-plan .paircoder/plans/backlogs/phase-a.md`) → `plan-2026-05-phase-a-foundation`
-2. ✅ TA.1 shipped (Vite + TS + PWA scaffold; all AC met; dev/build/test/preview all green)
-3. ✅ TA.2 shipped (IndexedDB v1 + five stores + wrappers + settings; 27 tests; coverage exceeds 90%; HMR clean)
-4. ✅ Navigator re-plan validation pass (2026-05-11) — backlog reparsed, plan structure confirmed.
-5. ✅ TA.2 finalized (2026-05-11) — typecheck cleanup done, ACs ticked, status flipped to `done`.
-6. ✅ Navigator re-plan validation pass #3 (2026-05-12) — plan healthy, no replan needed; TA.2 working-tree regression and uncommitted audit-round-2 fixes flagged.
-7. ✅ TA.2 re-finalized (2026-05-12) — task file restored to `status: done` with all 5 ACs ticked; full verification re-run (38/38 tests, db.ts branch 92.1%, typecheck/arch clean).
-8. **Commit the working tree, then engage TA.3.**
-   - State.md + `.paircoder/tasks/TA.2.task.md` carry the recovery; commit them with the 2026-05-12 audit-round-2 fixes (which may or may not still be in tree — re-check before staging).
-   - Then: `/start-task TA.3` — App shell + view system (P0, Cx 5, depends only on TA.1)
-8. **Outstanding housekeeping (non-blocking):**
-   - Investigate why an engage-run hook is flipping `TA.2.task.md`'s status from `done` back to `failed` in the working tree. Likely the audit-circuit-breaker path tags the task as failed without checking that it was already done. Worth filing as a bpsai-pair bug after Sprint A.
-   - Decide whether to delete the vestigial `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks linked, all task files reference `plan-sprint-0-engage` instead). Recommendation: keep `plan-sprint-0-engage` as the active plan since every task file already points to it — delete the 0-task duplicate to avoid future confusion. Optional / low-priority.
-8. Sanity-parse engage version still available: `bpsai-pair engage .paircoder/plans/backlogs/phase-a.md --dry-run` (passes today).
-9. After Sprint A merges: verify ALL enforcement gates green (see `00-ROADMAP.md`), then engage Sprint B.
-10. Sprints H–Y remain locked until Sprint G (Architectural Rebuild) merges.
+1. ✅ Sprint A complete — TA.1–TA.10 shipped on `engage/phase-a-rest` (204 tests pass).
+2. ✅ Sprint B planned (2026-05-12) — `plan-2026-05-phase-b-ai-core` with 12 task files written.
+3. **Pre-engage housekeeping:**
+   - Merge `engage/phase-a-rest` → `main` once user reviews (11 commits ahead, all gates green).
+   - Cut fresh branch `engage/phase-b` off main.
+   - Optional: delete vestigial `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks).
+4. **First Sprint-B coding move:** `/start-task TB.1` — Gemini provider (P0, Cx 8). Unblocks 8 of the other 11 tasks.
+5. **Parallelizable on day 1:** `/start-task TB.9` (Markdown + sanitizer) runs independently of the AI stack — only depends on TA.7 which is shipped.
+6. Sequence after TB.1: TB.4 (cache pattern, P0, Cx 5) — unblocks all 4 modes + error handling.
+7. Then in parallel: TB.2 (prompts), TB.3 (chapter detection), TB.5/TB.7/TB.8 (3 of 4 modes).
+8. Heaviest task: TB.6 (Classic Quiz, 13 cx) — schedule it as a focused day.
+9. **TB.12 (error handling) lands LAST** — it wraps the mode UIs and depends on TB.4.
+10. After Sprint B merges: verify all enforcement gates (G-AC, G-Tests, G-Arch, G-Security, G-Manual, G-State) → engage Sprint C (Mind Map / Socratic / Chat).
+11. Sprints H–Y remain locked until Sprint G (Architectural Rebuild) merges.
 
 ### Sprint A task order (critical path bold)
 
@@ -370,8 +433,13 @@ None currently. The roadmap is ready to engage.
 
 ## Open Decisions (logged from phase docs — resolve before engaging)
 
-- **Pre-A:** Framework choice locked? (Vite + TS recommended.)
-- **Pre-B:** IDB schema keys + chapter-ID format locked? Cache pattern `<type>_<chapterId>` locked?
+- **Pre-A:** ✅ Resolved — Vite + TS chosen (locked by TA.1 ship).
+- **Pre-B:** ✅ Resolved — IDB schema + chapter-ID `<bookId>_ch_<index>` locked by TA.2. Cache pattern `<type>_<chapterId>` will be locked by **TB.4** (G-Manual gate enforces).
+- **Sprint B in-flight (set during driver sessions):**
+  - TB.9: sanitizer test env — stub-walker recommended (no jsdom dep)
+  - TB.10: ship Format Text dialog in B (recommended) or push to C
+  - TB.11: expose temperature/maxOutputTokens in Settings now or in Sprint K (recommended K)
+  - TB.11: secret-storage posture — ship memory-only (stricter than backlog AC, matches Phase-A audit)
 - **Pre-G:** Framework re-confirmation (SvelteKit / Next / Solid Start) before committing weeks of work
 - **Pre-H:** JSON import format finalized? (See `docs/22-import-file-format.md`)
 - **Pre-U:** Default cloud, mandatory encryption?
