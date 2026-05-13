@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: pending
+status: in_progress
 sprint: '0'
 depends_on: []
 ---
@@ -16,7 +16,7 @@ In-house renderer for `# / ## / ###`, bold/italic, bullet & numbered lists, bloc
 
 # Acceptance Criteria
 
-- [ ] All listed Markdown features render correctly
-- [ ] XSS fixture (`<script>`, `onerror=`, `javascript:`) is neutralized
-- [ ] Vitest test suite covers every renderer rule
-- [ ] Links open in new tab with noopener
+- [x] All listed Markdown features render correctly
+- [x] XSS fixture (`<script>`, `onerror=`, `javascript:`) is neutralized
+- [x] Vitest test suite covers every renderer rule
+- [x] Links open in new tab with noopener
