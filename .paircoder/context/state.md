@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-13 (TB.12 Error handling done — 11/12 Sprint-B tasks complete; remaining: TB.10 = 5 cx)
+> Last updated: 2026-05-13 (TB.10 Format Text dialog done — **Sprint B is 12/12 complete**; 514/514 tests; chapter `formattedHtml` fallback wired into Read view via the audit-blessed sanitised-at-storage boundary)
 
 ## Active Plan
 
