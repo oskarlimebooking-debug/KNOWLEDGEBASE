@@ -102,9 +102,21 @@ Chapter content:
 Learner's explanation:
 {explanation}`;
 
-const FORMAT_TEXT_DEFAULT = `Clean up the raw text below for readability. Fix obvious OCR/PDF artefacts: rejoin words split across line breaks, restore paragraph breaks at sentence boundaries, and remove page-number/header/footer noise. Do not paraphrase, summarize, translate, or change wording — only reformat.
+const FORMAT_TEXT_DEFAULT = `Reformat the chapter text below as clean semantic HTML for reading.
 
-Return ONLY the cleaned plain-text content. No commentary.
+Rules:
+- Use ONLY these tags: h2, p, ul, li, strong, em, blockquote.
+- Wrap each paragraph in a paragraph tag. Use h2 for section breaks the
+  original text implied — do not invent breaks that are not there.
+- Convert bulleted lists into ul/li markup.
+- Use blockquote for indented quotations.
+- Do NOT paraphrase, summarise, translate, or change wording — only mark up.
+- Do NOT include script tags, style tags, inline event handlers, or any
+  tag outside the allow-list above.
+- Return ONLY the HTML body fragment. No preamble, no markdown fences,
+  no outer html or body wrapper.
+
+Chapter title: {title}
 
 Raw text:
 {content}`;

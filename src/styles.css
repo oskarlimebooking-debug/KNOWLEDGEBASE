@@ -445,6 +445,134 @@ body {
   outline-offset: 2px;
 }
 
+/* Format button — opens the Format Text dialog (TB.10). Sits to the
+   right of the tab strip on wide screens; wraps below on mobile. */
+.chapter-view__format {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  justify-self: start;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.chapter-view__format:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.chapter-view__format:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* TB.10 formatted body — replaces the paragraph render when
+   chapter.formattedHtml is set. innerHTML is the documented boundary
+   (sanitised at storage time in formatChapter). */
+.chapter-view__formatted {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chapter-view__formatted h2 {
+  margin: 1rem 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chapter-view__formatted p {
+  margin: 0;
+}
+
+.chapter-view__formatted ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.chapter-view__formatted blockquote {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-2);
+  color: var(--text-dim);
+}
+
+/* ---- Format Text dialog (TB.10) --------------------------------- */
+
+.modal__actions--vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.format-text__status {
+  margin-top: 1rem;
+}
+
+.format-text__status[hidden] {
+  display: none;
+}
+
+.format-text__loading,
+.format-text__progress {
+  display: grid;
+  gap: 0.5rem;
+  place-items: center;
+  text-align: center;
+}
+
+.format-text__spinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+.format-text__loading-label,
+.format-text__progress-label {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.875rem;
+}
+
+.format-text__progress {
+  width: 100%;
+  display: grid;
+  gap: 0.375rem;
+  place-items: stretch;
+  text-align: left;
+}
+
+.format-text__progress-bar {
+  position: relative;
+  height: 6px;
+  background: var(--panel-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.format-text__progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  transition: width 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .format-text__spinner {
+    animation: none;
+  }
+  .format-text__progress-fill {
+    transition: none;
+  }
+}
+
 /* ---- Summary mode (TB.5) ---------------------------------------- */
 
 .summary {

@@ -36,6 +36,14 @@ export function setSummaryWritebackHandler(fn: SummaryWritebackHandler): void {
   summaryWritebackHandler = fn;
 }
 
+// Launcher for the Format Text dialog (TB.10). `app.ts` wires this to
+// `openFormatTextDialog` against the modal-stack pane.
+type FormatTextLauncher = (chapter: Chapter, onAfterFormat: () => void | Promise<void>) => void;
+let formatTextLauncher: FormatTextLauncher | null = null;
+export function setFormatTextLauncher(fn: FormatTextLauncher): void {
+  formatTextLauncher = fn;
+}
+
 type NavigateToChapter = (bookId: string, chapterId: string) => void;
 
 let navigateHandler: NavigateToChapter | null = null;
@@ -77,9 +85,21 @@ async function loadChapterView(chapterId: string): Promise<ChapterViewData | nul
 }
 
 export function renderChapter(data: ChapterViewData): ShellNode {
-  const paragraphs = splitParagraphs(data.chapter.content);
-  const body: ShellNode[] =
-    paragraphs.length === 0
+  // TB.10 AC #4: prefer chapter.formattedHtml when present; fall back
+  // to the paragraph-split content otherwise. The formattedHtml string
+  // is sanitised at storage time (TB.10 calls sanitizeHtml before
+  // dbPut), so the chapter view can `innerHTML` it back inside that
+  // documented boundary — see formatted-host wireup in `wireChapterView`.
+  const hasFormatted =
+    typeof data.chapter.formattedHtml === 'string' && data.chapter.formattedHtml.length > 0;
+  const paragraphs = hasFormatted ? [] : splitParagraphs(data.chapter.content);
+  const body: ShellNode[] = hasFormatted
+    ? [{
+        tag: 'div',
+        className: 'chapter-view__formatted',
+        attrs: { 'data-role': 'formatted-host' },
+      }]
+    : paragraphs.length === 0
       ? [{ tag: 'p', className: 'chapter-view__empty', children: ['(empty chapter)'] }]
       : paragraphs.map((p) => ({
           tag: 'p',
@@ -136,6 +156,12 @@ export function renderChapter(data: ChapterViewData): ShellNode {
                 children: ['Teach-Back'],
               },
             ],
+          },
+          {
+            tag: 'button',
+            className: 'chapter-view__format',
+            attrs: { type: 'button', 'data-role': 'format-text', 'aria-label': 'Format text…' },
+            children: ['Format…'],
           },
         ],
       },
@@ -200,6 +226,21 @@ export async function markChapterComplete(bookId: string, chapterId: string): Pr
 }
 
 function renderBodyParagraphs(body: HTMLElement, chapter: Chapter): void {
+  // TB.10: prefer formattedHtml (sanitised at storage time) over raw
+  // paragraph split. Using innerHTML here is the audit-blessed boundary
+  // — sanitizeHtml ran in `formatChapter` before the value reached IDB.
+  if (typeof chapter.formattedHtml === 'string' && chapter.formattedHtml.length > 0) {
+    body.replaceChildren(
+      buildElement({
+        tag: 'div',
+        className: 'chapter-view__formatted',
+        attrs: { 'data-role': 'formatted-host' },
+      }),
+    );
+    const host = body.querySelector('.chapter-view__formatted') as HTMLElement | null;
+    if (host !== null) host.innerHTML = chapter.formattedHtml;
+    return;
+  }
   const paragraphs = splitParagraphs(chapter.content);
   if (paragraphs.length === 0) {
     body.replaceChildren(
@@ -245,6 +286,29 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
   const quizTab = pane.querySelector('.chapter-view__tab[data-mode="quiz"]') as HTMLElement | null;
   const flashcardsTab = pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null;
   const teachbackTab = pane.querySelector('.chapter-view__tab[data-mode="teachback"]') as HTMLElement | null;
+  const formatBtn = pane.querySelector('.chapter-view__format') as HTMLElement | null;
+
+  // If the initial render slotted the formatted-host div, populate it now.
+  // (innerHTML is the audit-blessed boundary — formattedHtml was
+  // sanitised at storage time in `formatChapter`.)
+  if (typeof data.chapter.formattedHtml === 'string' && data.chapter.formattedHtml.length > 0) {
+    const host = pane.querySelector('.chapter-view__formatted') as HTMLElement | null;
+    if (host !== null) host.innerHTML = data.chapter.formattedHtml;
+  }
+
+  formatBtn?.addEventListener('click', () => {
+    if (formatTextLauncher === null) {
+      showToast(toastContainer, 'Format dialog not wired up.', 'error');
+      return;
+    }
+    formatTextLauncher(data.chapter, async () => {
+      // Re-load the (now-formatted) chapter row and re-render the body.
+      const refreshed = await dbGet<Chapter>(STORE_CHAPTERS, data.chapter.id);
+      if (refreshed === undefined) return;
+      data.chapter = refreshed;
+      if (body !== null) renderBodyParagraphs(body, refreshed);
+    });
+  });
 
   prev?.addEventListener('click', () => {
     if (data.prevId === null || navigateHandler === null) return;

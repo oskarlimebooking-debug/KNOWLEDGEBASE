@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P2
 complexity: 5
-status: pending
+status: in_progress
 sprint: '0'
 depends_on:
 - TB.9
@@ -18,7 +18,7 @@ Button on book/chapter view. Choices: format current chapter / format all. Calls
 
 # Acceptance Criteria
 
-- [ ] Single-chapter formatting works
-- [ ] Multi-chapter progress bar updates per-chapter
-- [ ] HTML is sanitized before storage
-- [ ] Read view falls back to raw text if `formattedHtml` is null
+- [x] Single-chapter formatting works (`formatChapter(chapter, apiKey)` → `callAnthropic` → `sanitizeHtml` → `dbPut(STORE_CHAPTERS, ...)`; dialog test exercises end-to-end with `onAfterFormat` callback)
+- [x] Multi-chapter progress bar updates per-chapter (`formatAllChapters` invokes `onProgress` after each chapter completion; dialog re-renders the progress tree with current/total + percent fill on each tick; test confirms status container is populated mid-run)
+- [x] HTML is sanitized before storage (every `formatChapter` call routes through TB.9's `sanitizeHtml`; test confirms `<script>` / `onerror=` are stripped from the persisted `formattedHtml`)
+- [x] Read view falls back to raw text if `formattedHtml` is null (`renderChapter` checks `chapter.formattedHtml` length > 0; falls back to `splitParagraphs(content)` otherwise)
