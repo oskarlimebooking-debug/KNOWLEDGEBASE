@@ -134,6 +134,117 @@ describe('showQuiz — hub state', () => {
     expect(view.querySelector('.quiz__btn[data-role="quiz-retry"]')).not.toBeNull();
   });
 
+  it('shows an error toast on a 500 from Start, and Retry re-runs loadQuiz with the same cache key (TB.12 AC #1–4)', async () => {
+    setSecret('aiApiKey', 'sk-ant-test-xyz');
+    const { pane, toastContainer } = makeContainer();
+    await dbPut(STORE_CHAPTERS, chapter());
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    // First call: 400 (non-retryable) so the test stays fast and the
+    // retry path consumes the second mock. AC #3 specifies "a 500"; the
+    // explicit 500 toast assertion lives in the Regenerate test below.
+    fetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'bad' } }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    fetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          id: 'm',
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-opus-4-7',
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                questions: [
+                  {
+                    type: 'multiple_choice',
+                    prompt: 'Q1',
+                    options: ['a', 'b', 'c', 'd'],
+                    correctIndex: 0,
+                    explanation: 'because',
+                  },
+                ],
+              }),
+            },
+          ],
+          stop_reason: 'end_turn',
+          stop_sequence: null,
+          usage: { input_tokens: 1, output_tokens: 1 },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    await showQuiz(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    pane.children[0]!.querySelector('.quiz__btn[data-role="start"]')!.dispatchEvent('click');
+    await vi.waitFor(() => {
+      if (!pane.children[0]!.className.includes('quiz--error')) throw new Error('not yet error');
+    });
+
+    // Toast surfaced (AC #1, #3).
+    const toast = toastContainer.children[0];
+    expect(toast).toBeDefined();
+    expect(toast!.className).toContain('toast--error');
+
+    // Retry is present (AC #2).
+    const retry = pane.children[0]!.querySelector('.quiz__btn[data-role="quiz-retry"]');
+    expect(retry).not.toBeNull();
+
+    // Click retry — re-runs the SAME loadQuiz call (AC #2, #4).
+    retry!.dispatchEvent('click');
+    await vi.waitFor(() => {
+      if (!pane.children[0]!.className.includes('quiz--question')) {
+        throw new Error('not yet at question');
+      }
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+    const { getCachedGeneration } = await import('../lib/cache');
+    const cached = await getCachedGeneration<{ questions: unknown[] }>('quiz', 'book_1_ch_0');
+    expect(cached).toBeDefined();
+  });
+
+  it('shows an error toast and Retry on a Regenerate failure (TB.12 AC #1, #2, #3 — fake 500)', async () => {
+    setSecret('aiApiKey', 'sk-ant-test-xyz');
+    const { pane, toastContainer } = makeContainer();
+    await dbPut(STORE_CHAPTERS, chapter());
+    await recordQuizAttempt('book_1_ch_0', {
+      date: '2026-05-13T00:00:00Z',
+      percent: 100,
+      correctCount: 1,
+      gradedCount: 1,
+      wrongIndices: [],
+    });
+    // SDK retries 5xx; mockResolvedValue makes every retry fail.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'overloaded_error', message: 'boom' } }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    await showQuiz(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    pane.children[0]!.querySelector('.quiz__btn[data-role="regenerate"]')!.dispatchEvent('click');
+    await vi.waitFor(
+      () => {
+        if (!pane.children[0]!.className.includes('quiz--error')) throw new Error('not yet error');
+      },
+      { timeout: 8000 },
+    );
+    const toast = toastContainer.children[0];
+    expect(toast).toBeDefined();
+    expect(toast!.className).toContain('toast--error');
+    expect(pane.children[0]!.querySelector('.quiz__btn[data-role="quiz-retry"]')).not.toBeNull();
+  }, 10_000);
+
   it('uses the in-memory API key from secrets.ts when Start is clicked', async () => {
     setSecret('aiApiKey', 'sk-ant-test-xyz');
     const { pane, toastContainer } = makeContainer();

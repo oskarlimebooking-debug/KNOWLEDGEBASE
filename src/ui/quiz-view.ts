@@ -155,7 +155,9 @@ function wireHub(state: UIState): void {
 
 async function startQuiz(state: UIState, filterIndices: number[] | null): Promise<void> {
   if (state.apiKey === '') {
-    renderError(state, 'No API key set. Open Settings → API key to add yours.');
+    renderError(state, 'No API key set. Open Settings → API key to add yours.', () =>
+      renderHub(state),
+    );
     return;
   }
   renderLoading(state);
@@ -174,7 +176,9 @@ async function startQuiz(state: UIState, filterIndices: number[] | null): Promis
     state.answers = [];
     renderQuestion(state);
   } catch (err) {
-    renderError(state, (err as Error).message ?? 'Quiz generation failed');
+    const message = (err as Error).message ?? 'Quiz generation failed';
+    renderError(state, message, () => void startQuiz(state, filterIndices));
+    showToast(state.toastContainer, `Quiz failed: ${message}`, 'error');
   }
 }
 
@@ -196,7 +200,7 @@ function filterQuiz(quiz: Quiz, filterIndices: number[] | null): [Quiz, number[]
 
 async function runMoreQuestions(state: UIState): Promise<void> {
   if (state.apiKey === '') {
-    renderError(state, 'No API key set.');
+    renderError(state, 'No API key set.', () => renderHub(state));
     return;
   }
   renderLoading(state);
@@ -206,13 +210,15 @@ async function runMoreQuestions(state: UIState): Promise<void> {
     showToast(state.toastContainer, 'Added more questions.', 'success');
     renderHub(state);
   } catch (err) {
-    renderError(state, (err as Error).message ?? 'Could not add more questions');
+    const message = (err as Error).message ?? 'Could not add more questions';
+    renderError(state, message, () => void runMoreQuestions(state));
+    showToast(state.toastContainer, `More questions failed: ${message}`, 'error');
   }
 }
 
 async function runRegenerate(state: UIState): Promise<void> {
   if (state.apiKey === '') {
-    renderError(state, 'No API key set.');
+    renderError(state, 'No API key set.', () => renderHub(state));
     return;
   }
   renderLoading(state);
@@ -221,7 +227,9 @@ async function runRegenerate(state: UIState): Promise<void> {
     showToast(state.toastContainer, 'Quiz regenerated.', 'success');
     renderHub(state);
   } catch (err) {
-    renderError(state, (err as Error).message ?? 'Could not regenerate');
+    const message = (err as Error).message ?? 'Could not regenerate';
+    renderError(state, message, () => void runRegenerate(state));
+    showToast(state.toastContainer, `Regenerate failed: ${message}`, 'error');
   }
 }
 
@@ -241,7 +249,7 @@ function renderLoading(state: UIState): void {
   );
 }
 
-function renderError(state: UIState, message: string): void {
+function renderError(state: UIState, message: string, onRetry: () => void): void {
   state.pane.replaceChildren(
     buildElement({
       tag: 'div',
@@ -259,7 +267,7 @@ function renderError(state: UIState, message: string): void {
     }),
   );
   const retry = state.pane.querySelector('.quiz__btn[data-role="quiz-retry"]') as HTMLElement | null;
-  retry?.addEventListener('click', () => renderHub(state));
+  retry?.addEventListener('click', onRetry);
 }
 
 // --- Question rendering ---------------------------------------------------

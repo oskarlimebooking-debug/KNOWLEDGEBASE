@@ -208,4 +208,61 @@ describe('showSummary', () => {
     expect(pane.children[0]!.className).toContain('summary--error');
     expect(pane.children[0]!.querySelector('.summary__retry')).not.toBeNull();
   });
+
+  it('shows an error toast when the API returns a 500 (TB.12 AC #1, #3)', async () => {
+    const { doc, pane, toastContainer } = makeContainer();
+    vi.stubGlobal('document', doc);
+    setSecret('aiApiKey', 'sk-ant-test-abc123');
+    await dbPut(STORE_CHAPTERS, chapter());
+    // SDK retries 5xx; mockResolvedValue (not Once) makes every retry fail.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'overloaded_error', message: 'boom' } }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    await showSummary(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    const toast = toastContainer.children[0];
+    expect(toast).toBeDefined();
+    expect(toast!.className).toContain('toast--error');
+  }, 10_000);
+
+  it('retry button re-runs loadSummary using the same cache key (TB.12 AC #2, #4)', async () => {
+    const { doc, pane, toastContainer } = makeContainer();
+    vi.stubGlobal('document', doc);
+    setSecret('aiApiKey', 'sk-ant-test-abc123');
+    await dbPut(STORE_CHAPTERS, chapter());
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    // 400 is NOT retried by the SDK — deterministic one-call failure.
+    fetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'bad' } }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    fetchSpy.mockResolvedValueOnce(anthropicResponse(SAMPLE));
+
+    await showSummary(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    expect(pane.children[0]!.className).toContain('summary--error');
+
+    const retry = pane.children[0]!.querySelector('.summary__retry')!;
+    retry.dispatchEvent('click');
+    await vi.waitFor(() => {
+      const node = pane.children[0]!;
+      if (node.className.includes('summary--error')) throw new Error('still error');
+      if (node.className.includes('summary--loading')) throw new Error('still loading');
+    });
+    expect(pane.children[0]!.className).toBe('summary');
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+    // Cache key is `summary_<chapterId>` — the row stored after retry uses
+    // that exact key, proving retry never re-shapes the key on failure.
+    const { getCachedGeneration } = await import('../lib/cache');
+    const cached = await getCachedGeneration<Summary>('summary', chapter().id);
+    expect(cached).toBeDefined();
+  });
 });

@@ -325,4 +325,80 @@ describe('showTeachback', () => {
     });
     expect(pane.children[0]!.querySelector('.teachback__result-error')).not.toBeNull();
   });
+
+  it('shows an error toast on result-area failure (TB.12 AC #1, #3)', async () => {
+    const { doc, pane, toastContainer } = makeContainer();
+    vi.stubGlobal('document', doc);
+    setSecret('aiApiKey', 'sk-ant-test-abc123');
+    // SDK retries 5xx; mockResolvedValue makes every retry fail.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'overloaded_error', message: 'boom' } }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    await showTeachback(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    const root = pane.children[0]!;
+    const textarea = root.querySelector('[data-role="teachback-textarea"]')!;
+    textarea.textContent = 'I learned something.';
+    root.querySelector('[data-role="teachback-submit"]')!.dispatchEvent('click');
+
+    await vi.waitFor(
+      () => {
+        const errEl = pane.children[0]!.querySelector('.teachback__result-error');
+        if (errEl === null) throw new Error('error not yet rendered');
+      },
+      { timeout: 8000 },
+    );
+    const toast = toastContainer.children[0];
+    expect(toast).toBeDefined();
+    expect(toast!.className).toContain('toast--error');
+  }, 10_000);
+
+  it('result-area error has a Retry button that re-submits with the same explanation (TB.12 AC #2, #4)', async () => {
+    const { doc, pane, toastContainer } = makeContainer();
+    vi.stubGlobal('document', doc);
+    setSecret('aiApiKey', 'sk-ant-test-abc123');
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    // 400 is NOT retried by the SDK — deterministic one-call failure.
+    fetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'bad' } }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    fetchSpy.mockResolvedValueOnce(anthropicResponse(SAMPLE_RESULT));
+
+    await showTeachback(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    const root = pane.children[0]!;
+    const textarea = root.querySelector('[data-role="teachback-textarea"]')!;
+    textarea.textContent = 'I learned something.';
+    root.querySelector('[data-role="teachback-submit"]')!.dispatchEvent('click');
+
+    await vi.waitFor(() => {
+      const errEl = pane.children[0]!.querySelector('.teachback__result-error');
+      if (errEl === null) throw new Error('error not yet rendered');
+    });
+    const retry = pane.children[0]!.querySelector('[data-role="teachback-result-retry"]')!;
+    expect(retry).not.toBeNull();
+    retry.dispatchEvent('click');
+
+    await vi.waitFor(() => {
+      const ok = pane.children[0]!.querySelector('.teachback__result');
+      if (ok === null) throw new Error('result not yet rendered');
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+    // Cache key `teachback_<chapterId>` — the row written after retry is
+    // under that exact id, proving retry uses the same key.
+    const { getCachedGeneration } = await import('../lib/cache');
+    const cached = await getCachedGeneration<TeachbackAttempt>('teachback', 'book_1_ch_0');
+    expect(cached).toBeDefined();
+    expect(cached?.explanation).toBe('I learned something.');
+  });
 });

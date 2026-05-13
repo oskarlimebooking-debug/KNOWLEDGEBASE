@@ -268,4 +268,59 @@ describe('showFlashcards', () => {
     expect(pane.children[0]!.className).toContain('flashcards--error');
     expect(pane.children[0]!.querySelector('.flashcards__retry')).not.toBeNull();
   });
+
+  it('shows an error toast when the API returns a 500 (TB.12 AC #1, #3)', async () => {
+    const { doc, pane, toastContainer } = makeContainer();
+    vi.stubGlobal('document', doc);
+    setSecret('aiApiKey', 'sk-ant-test-abc123');
+    // SDK retries 5xx; mockResolvedValue (not Once) makes every retry fail.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'overloaded_error', message: 'boom' } }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    await showFlashcards(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    const toast = toastContainer.children[0];
+    expect(toast).toBeDefined();
+    expect(toast!.className).toContain('toast--error');
+  }, 10_000);
+
+  it('retry button re-runs loadFlashcards using the same cache key (TB.12 AC #2, #4)', async () => {
+    const { doc, pane, toastContainer } = makeContainer();
+    vi.stubGlobal('document', doc);
+    setSecret('aiApiKey', 'sk-ant-test-abc123');
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    // 400 is NOT retried by the SDK — deterministic one-call failure.
+    fetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'bad' } }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    fetchSpy.mockResolvedValueOnce(anthropicResponse({ cards: SAMPLE_CARDS }));
+
+    await showFlashcards(chapter(), asHTMLElement(pane), {
+      toastContainer: asHTMLElement(toastContainer),
+    });
+    expect(pane.children[0]!.className).toContain('flashcards--error');
+
+    const retry = pane.children[0]!.querySelector('.flashcards__retry')!;
+    retry.dispatchEvent('click');
+    await vi.waitFor(() => {
+      const card = pane.children[0]!.querySelector('.flashcards__card');
+      if (card === null) throw new Error('not yet success');
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+    const { getCachedGeneration } = await import('../lib/cache');
+    const cached = await getCachedGeneration<{ front: string; back: string }[]>(
+      'flashcards',
+      chapter().id,
+    );
+    expect(cached).toBeDefined();
+  });
 });

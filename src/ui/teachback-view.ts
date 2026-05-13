@@ -175,7 +175,15 @@ function renderResultError(message: string): ShellNode {
     tag: 'div',
     className: 'teachback__result-error',
     attrs: { role: 'alert', 'aria-live': 'assertive' },
-    children: [{ tag: 'p', className: 'teachback__error-message', children: [message] }],
+    children: [
+      { tag: 'p', className: 'teachback__error-message', children: [message] },
+      {
+        tag: 'button',
+        className: 'teachback__retry',
+        attrs: { type: 'button', 'data-role': 'teachback-result-retry' },
+        children: ['Retry'],
+      },
+    ],
   };
 }
 
@@ -216,13 +224,7 @@ function wireSubmit(
   ) as HTMLElement | null;
   if (submit === null || textarea === null || resultContainer === null) return;
 
-  submit.addEventListener('click', () => {
-    const explanation = readExplanation(textarea);
-    if (explanation.trim() === '') {
-      setValidation(validation, 'Please enter your explanation before submitting.');
-      return;
-    }
-    setValidation(validation, '');
+  const runEvaluation = (explanation: string): void => {
     resultContainer.replaceChildren(buildElement(renderResultLoading()));
     void evaluateTeachback(chapter, explanation, apiKey).then(
       (result) => {
@@ -232,8 +234,22 @@ function wireSubmit(
         const message = err.message ?? 'Teach-back evaluation failed';
         resultContainer.replaceChildren(buildElement(renderResultError(message)));
         showToast(options.toastContainer, `Teach-back failed: ${message}`, 'error');
+        const retryBtn = resultContainer.querySelector(
+          '[data-role="teachback-result-retry"]',
+        ) as HTMLElement | null;
+        retryBtn?.addEventListener('click', () => runEvaluation(explanation));
       },
     );
+  };
+
+  submit.addEventListener('click', () => {
+    const explanation = readExplanation(textarea);
+    if (explanation.trim() === '') {
+      setValidation(validation, 'Please enter your explanation before submitting.');
+      return;
+    }
+    setValidation(validation, '');
+    runEvaluation(explanation);
   });
 }
 
