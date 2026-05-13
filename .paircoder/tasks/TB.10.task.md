@@ -5,11 +5,12 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P2
 complexity: 5
-status: in_progress
+status: done
 sprint: '0'
 depends_on:
 - TB.9
 - TB.1
+completed_at: '2026-05-13T11:31:27.807154'
 ---
 
 # Format Text dialog
