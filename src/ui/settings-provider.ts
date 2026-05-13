@@ -26,11 +26,11 @@ import {
   getSelectedModel,
 } from '../ai/anthropic';
 import { setSetting } from '../data/db';
-import { clearSecret, getSecret, setSecret } from '../data/secrets';
+import { AI_API_KEY_NAME, clearSecret, getSecret, setSecret } from '../data/secrets';
 import { buildElement, type ShellNode } from './dom';
 import { showToast } from './toast';
 
-const KEY_SECRET_NAME = 'anthropicApiKey';
+const KEY_SECRET_NAME = AI_API_KEY_NAME;
 const SELECTED_MODEL_SETTING = 'selectedModel';
 
 export interface ProviderState {
@@ -92,7 +92,7 @@ export function buildProviderSection(
                 className: 'settings__input provider__key-input',
                 attrs: {
                   type: 'password',
-                  name: 'anthropicApiKey',
+                  name: KEY_SECRET_NAME,
                   autocomplete: 'off',
                   spellcheck: 'false',
                   'aria-label': 'Anthropic API key',

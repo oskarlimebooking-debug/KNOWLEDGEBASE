@@ -213,7 +213,17 @@ function renderSafeTag(tagName: string, rawAttrs: string): string {
   }
   if (tagName === 'a') {
     if (!attrs.some(([n]) => n === 'target')) attrs.push(['target', '_blank']);
-    if (!attrs.some(([n]) => n === 'rel')) attrs.push(['rel', 'noopener']);
+    // rel: ensure `noopener` is present even if a caller-supplied `rel`
+    // value already exists (audit P2-1: empty/non-conforming rel slipped
+    // through and forced target=_blank without noopener — tab-nabbing
+    // surface). Tokenise, add noopener if missing, re-serialise.
+    const relIdx = attrs.findIndex(([n]) => n === 'rel');
+    const existingRel = relIdx >= 0 ? (attrs[relIdx]![1] ?? '') : '';
+    const tokens = new Set(existingRel.split(/\s+/).filter((t) => t.length > 0));
+    tokens.add('noopener');
+    const merged: [string, string] = ['rel', Array.from(tokens).join(' ')];
+    if (relIdx >= 0) attrs[relIdx] = merged;
+    else attrs.push(merged);
   }
   const serialised = attrs.map(([n, v]) => `${n}="${escapeHtml(v)}"`).join(' ');
   return serialised.length > 0 ? `<${tagName} ${serialised}>` : `<${tagName}>`;

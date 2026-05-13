@@ -73,7 +73,7 @@ describe('loadProviderState', () => {
   });
 
   it('reflects an in-memory key (memory-only — never persisted)', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const state = await loadProviderState();
     expect(state.apiKey).toBe(API_KEY);
     // With a key in memory, seed availableModels from FALLBACK_MODELS so
@@ -88,11 +88,11 @@ describe('loadProviderState', () => {
   });
 
   it('never reads from or writes to IDB for the API key (AC #1)', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     await loadProviderState();
     // No setting row should ever appear for the key — that's the entire
     // point of the memory-only secret store.
-    expect(await getSetting<string>('anthropicApiKey')).toBeUndefined();
+    expect(await getSetting<string>('aiApiKey')).toBeUndefined();
     expect(await getSetting<string>('apiKey')).toBeUndefined();
   });
 });
@@ -147,7 +147,7 @@ describe('buildProviderSection — render', () => {
   });
 
   it('renders a model dropdown (<select>) seeded with current model + availableModels', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const doc = makeDoc();
     const state = await loadProviderState();
     const section = buildProviderSection(
@@ -167,7 +167,7 @@ describe('buildProviderSection — render', () => {
 
   it('marks the current selectedModel option as selected', async () => {
     await setSetting('selectedModel', 'claude-sonnet-4-6');
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const doc = makeDoc();
     const state = await loadProviderState();
     const section = buildProviderSection(
@@ -182,7 +182,7 @@ describe('buildProviderSection — render', () => {
   });
 
   it('seeds the key input value with the current memory-only key', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const doc = makeDoc();
     const state = await loadProviderState();
     const section = buildProviderSection(
@@ -225,13 +225,13 @@ describe('wireProviderSection — key persistence (AC #1)', () => {
     setInputValue(input, API_KEY);
     input.dispatchEvent('input');
     // Memory-only: getSecret returns the value, IDB stays clean.
-    expect(getSecret('anthropicApiKey')).toBe(API_KEY);
-    expect(await getSetting<string>('anthropicApiKey')).toBeUndefined();
+    expect(getSecret('aiApiKey')).toBe(API_KEY);
+    expect(await getSetting<string>('aiApiKey')).toBeUndefined();
     expect(await getSetting<string>('apiKey')).toBeUndefined();
   });
 
   it('clearing the input clears the secret', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const doc = makeDoc();
     const state = await loadProviderState();
     const section = buildProviderSection(
@@ -243,7 +243,7 @@ describe('wireProviderSection — key persistence (AC #1)', () => {
     const input = findEl(section, '[data-role="provider-key-input"]');
     setInputValue(input, '');
     input.dispatchEvent('input');
-    expect(getSecret('anthropicApiKey')).toBeUndefined();
+    expect(getSecret('aiApiKey')).toBeUndefined();
   });
 });
 
@@ -269,7 +269,7 @@ describe('wireProviderSection — show/hide toggle', () => {
 
 describe('wireProviderSection — Test Connection (AC #2)', () => {
   it('on success: populates the dropdown and shows a success toast', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       modelsListResponse(['claude-opus-4-7', 'claude-sonnet-4-6']),
     );
@@ -297,7 +297,7 @@ describe('wireProviderSection — Test Connection (AC #2)', () => {
   });
 
   it('on failure: shows an error toast and does not change the dropdown', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       errorResponse('Invalid API key', 401),
     );
@@ -349,7 +349,7 @@ describe('wireProviderSection — Test Connection (AC #2)', () => {
   });
 
   it('does not leak the API key into the failure toast (no-PII)', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       errorResponse(`Upstream issue with key=${API_KEY}`, 400),
     );
@@ -375,7 +375,7 @@ describe('wireProviderSection — Test Connection (AC #2)', () => {
 
 describe('wireProviderSection — Refresh Models (AC #4)', () => {
   it('clicking Refresh re-fetches and updates the dropdown', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(modelsListResponse(['claude-opus-4-7']));
@@ -400,7 +400,7 @@ describe('wireProviderSection — Refresh Models (AC #4)', () => {
   });
 
   it('hits the live endpoint (AC #4: real fetch, not just FALLBACK_MODELS)', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(
@@ -449,7 +449,7 @@ describe('wireProviderSection — Refresh Models (AC #4)', () => {
 
 describe('wireProviderSection — model selection persistence', () => {
   it('changing the dropdown persists selectedModel to IDB settings', async () => {
-    setSecret('anthropicApiKey', API_KEY);
+    setSecret('aiApiKey', API_KEY);
     const doc = makeDoc();
     const state = await loadProviderState();
     const section = buildProviderSection(

@@ -326,11 +326,19 @@ describe('sanitizeHtml — link attributes', () => {
     );
   });
 
-  it('preserves an existing rel value if present', () => {
+  it('preserves an existing rel value AND ensures noopener is present', () => {
+    // Audit P2-1 hardening: tokenise existing rel + add noopener if missing,
+    // so callers can't slip through with a non-conforming rel and force
+    // target=_blank without noopener.
     const out = sanitizeHtml('<a href="https://x.com" rel="nofollow">x</a>');
-    expect(out).toContain('rel="nofollow"');
-    // target still gets forced
+    expect(out).toMatch(/rel="[^"]*nofollow[^"]*"/);
+    expect(out).toMatch(/rel="[^"]*noopener[^"]*"/);
     expect(out).toContain('target="_blank"');
+  });
+
+  it('adds noopener when rel is empty (audit P2-1)', () => {
+    const out = sanitizeHtml('<a href="https://x.com" rel="">x</a>');
+    expect(out).toMatch(/rel="[^"]*noopener[^"]*"/);
   });
 
   it('passes through anchor with safe href, target, and rel', () => {
