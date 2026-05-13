@@ -81,15 +81,35 @@ export async function callAnthropic(
   }
 }
 
-export async function fetchAvailableModels(apiKey: string): Promise<string[]> {
+export interface FetchModelsOptions {
+  /** When true, propagate transport / API errors instead of returning the
+   *  hard-coded fallback list. Used by Settings → Test Connection so the
+   *  user gets a real success/failure signal; the default (false) preserves
+   *  the TB.1 fallback contract for non-interactive callers. */
+  throwOnError?: boolean;
+}
+
+export async function fetchAvailableModels(
+  apiKey: string,
+  options: FetchModelsOptions = {},
+): Promise<string[]> {
   const client = makeClient(apiKey);
   try {
     const out: string[] = [];
     for await (const m of client.models.list()) {
       if (typeof m.id === 'string' && m.id.length > 0) out.push(m.id);
     }
-    return out.length > 0 ? out : [...FALLBACK_MODELS];
-  } catch {
+    if (out.length > 0) return out;
+    if (options.throwOnError === true) {
+      throw new Error('Anthropic returned an empty model list');
+    }
+    return [...FALLBACK_MODELS];
+  } catch (err) {
+    if (options.throwOnError === true) {
+      throw err instanceof Error
+        ? new Error(redact(err.message, apiKey))
+        : new Error(redact(String(err), apiKey));
+    }
     return [...FALLBACK_MODELS];
   }
 }

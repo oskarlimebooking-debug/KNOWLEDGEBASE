@@ -68,7 +68,7 @@ describe('openSettings', () => {
     expect(modal.getAttribute('role')).toBe('dialog');
   });
 
-  it('renders Reading, Data, and Prompts sections', async () => {
+  it('renders Reading, Data, AI Provider, and Prompts sections', async () => {
     const doc = makeDoc();
     vi.stubGlobal('document', doc);
     const stack = doc.createElement('div');
@@ -79,7 +79,7 @@ describe('openSettings', () => {
       for (const c of node.children) walk(c as never);
     };
     walk(stack as never);
-    expect(headings).toEqual(['Reading', 'Data', 'Prompts']);
+    expect(headings).toEqual(['Reading', 'Data', 'AI Provider', 'Prompts']);
   });
 
   it('seeds the WPM input from setSetting (or default)', async () => {

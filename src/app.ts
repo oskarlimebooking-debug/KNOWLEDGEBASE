@@ -31,7 +31,8 @@ function defaultSettingsHandler(root: HTMLElement): SettingsHandler {
   return () => {
     const stack = root.querySelector('.view-modal-stack__pane') as HTMLElement | null;
     if (!stack) return;
-    void openSettings(stack);
+    const toast = root.querySelector('.toast-container') as HTMLElement | null;
+    void openSettings(stack, document, toast ?? undefined);
   };
 }
 

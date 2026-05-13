@@ -272,3 +272,55 @@ describe('fetchAvailableModels', () => {
     expect(FALLBACK_MODELS).toContain('claude-haiku-4-5');
   });
 });
+
+describe('fetchAvailableModels — throwOnError option (TB.11)', () => {
+  it('propagates errors when throwOnError is true', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(errorResponse('Invalid API key', 401));
+    await expect(
+      fetchAvailableModels(API_KEY, { throwOnError: true }),
+    ).rejects.toThrow();
+  });
+
+  it('throws on an empty model list when throwOnError is true', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ data: [], has_more: false, first_id: null, last_id: null }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    await expect(
+      fetchAvailableModels(API_KEY, { throwOnError: true }),
+    ).rejects.toThrow(/empty model list/i);
+  });
+
+  it('redacts the API key from thrown error messages', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      Promise.resolve(errorResponse(`Upstream issue with key=${API_KEY}`, 400)),
+    );
+    try {
+      await fetchAvailableModels(API_KEY, { throwOnError: true });
+      throw new Error('should not reach');
+    } catch (e) {
+      const msg = (e as Error).message;
+      expect(msg).not.toContain(API_KEY);
+      expect(msg).toContain('REDACTED');
+    }
+  });
+
+  it('still returns the model list on success when throwOnError is true', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [{ id: 'claude-opus-4-7', type: 'model', display_name: 'Opus' }],
+          has_more: false,
+          first_id: 'claude-opus-4-7',
+          last_id: 'claude-opus-4-7',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    expect(await fetchAvailableModels(API_KEY, { throwOnError: true })).toEqual([
+      'claude-opus-4-7',
+    ]);
+  });
+});
