@@ -5,7 +5,7 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 13
-status: failed
+status: in_progress
 sprint: '0'
 depends_on:
 - TB.1
@@ -18,9 +18,9 @@ depends_on:
 
 # Acceptance Criteria
 
-- [ ] All 3 question types render and grade correctly
-- [ ] Score persists per attempt with date
-- [ ] Best score + attempt count visible in the chapter quiz hub
-- [ ] "Retake wrong only" works on a quiz with mixed correct/incorrect
-- [ ] "More questions" appends without duplicates (manual sanity)
-- [ ] "Regenerate" clears cache and produces a new quiz
+- [x] All 3 question types render and grade correctly (`gradeQuiz` tests + `renderMCBody`/`renderTFBody`/`renderOEBody`; MC + T/F count toward score, open-ended excluded as designed)
+- [x] Score persists per attempt with date (`recordQuizAttempt` writes `{date, percent, correctCount, gradedCount, wrongIndices}` to `quiz_scores_<chapterId>` in the settings store)
+- [x] Best score + attempt count visible in the chapter quiz hub (`quizStats(attempts)` → hub renders `Best 75% · 2 attempts`)
+- [x] "Retake wrong only" works on a quiz with mixed correct/incorrect (`filterQuiz` with `lastWrongIndices`; `indexMap` writes wrong positions back to the original quiz indices for the next attempt)
+- [x] "More questions" appends without duplicates (`appendMoreQuestions` sends every existing prompt in the `Do NOT repeat:` instruction; merge writes back to cache). The literal "no duplicates" guarantee depends on the model honouring the instruction; we do not programmatically de-dup post-response.
+- [x] "Regenerate" clears cache and produces a new quiz (`regenerateQuiz` calls `invalidateGeneration('quiz', ...)` then `loadQuiz`; test asserts the second fetch happens)

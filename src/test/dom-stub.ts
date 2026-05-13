@@ -151,6 +151,18 @@ export class StubElement {
 
 function compileSelector(selector: string): ((el: StubElement) => boolean) | null {
   const s = selector.trim();
+  // Combined selectors: split on the first `[` so `.class[attr=val]` becomes
+  // `.class` + `[attr=val]`. Both parts must match. (Only handles the
+  // `class + attr` combination — that's all our UI tests use.)
+  const bracketIdx = s.indexOf('[');
+  if (s.startsWith('.') && bracketIdx > 0) {
+    const classPart = s.slice(0, bracketIdx);
+    const attrPart = s.slice(bracketIdx);
+    const classPred = compileSelector(classPart);
+    const attrPred = compileSelector(attrPart);
+    if (classPred === null || attrPred === null) return null;
+    return (el) => classPred(el) && attrPred(el);
+  }
   if (s.startsWith('.')) {
     const cls = s.slice(1);
     return (el) => el.classList.contains(cls);

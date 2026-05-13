@@ -20,11 +20,12 @@ import {
 } from '../lib/library-data';
 import { buildElement, type ShellNode } from './dom';
 import { showFlashcards } from './flashcards-view';
+import { showQuiz } from './quiz-view';
 import { showSummary } from './summary-view';
 import { showTeachback } from './teachback-view';
 import { showToast } from './toast';
 
-export type ChapterMode = 'read' | 'summary' | 'flashcards' | 'teachback';
+export type ChapterMode = 'read' | 'summary' | 'flashcards' | 'teachback' | 'quiz';
 
 // Callback fired after a summary writes back chapter.difficulty.
 // `app.ts` wires this to a library refresh so the book card's
@@ -115,6 +116,12 @@ export function renderChapter(data: ChapterViewData): ShellNode {
                 className: 'chapter-view__tab',
                 attrs: { type: 'button', 'data-mode': 'summary', role: 'tab', 'aria-selected': 'false' },
                 children: ['Summary'],
+              },
+              {
+                tag: 'button',
+                className: 'chapter-view__tab',
+                attrs: { type: 'button', 'data-mode': 'quiz', role: 'tab', 'aria-selected': 'false' },
+                children: ['Quiz'],
               },
               {
                 tag: 'button',
@@ -215,6 +222,7 @@ function switchTab(pane: HTMLElement, mode: ChapterMode): void {
   const tabs = [
     pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null,
     pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null,
+    pane.querySelector('.chapter-view__tab[data-mode="quiz"]') as HTMLElement | null,
     pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null,
     pane.querySelector('.chapter-view__tab[data-mode="teachback"]') as HTMLElement | null,
   ];
@@ -234,6 +242,7 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
   const body = pane.querySelector('.chapter-view__body') as HTMLElement | null;
   const readTab = pane.querySelector('.chapter-view__tab[data-mode="read"]') as HTMLElement | null;
   const summaryTab = pane.querySelector('.chapter-view__tab[data-mode="summary"]') as HTMLElement | null;
+  const quizTab = pane.querySelector('.chapter-view__tab[data-mode="quiz"]') as HTMLElement | null;
   const flashcardsTab = pane.querySelector('.chapter-view__tab[data-mode="flashcards"]') as HTMLElement | null;
   const teachbackTab = pane.querySelector('.chapter-view__tab[data-mode="teachback"]') as HTMLElement | null;
 
@@ -275,6 +284,11 @@ function wireChapterView(pane: HTMLElement, data: ChapterViewData, toastContaine
         if (summaryWritebackHandler !== null) await summaryWritebackHandler();
       },
     });
+  });
+  quizTab?.addEventListener('click', () => {
+    if (body === null) return;
+    switchTab(pane, 'quiz');
+    void showQuiz(data.chapter, body, { toastContainer });
   });
   flashcardsTab?.addEventListener('click', () => {
     if (body === null) return;
