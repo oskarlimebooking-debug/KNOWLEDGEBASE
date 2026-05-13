@@ -5,9 +5,10 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P0
 complexity: 8
-status: in_progress
+status: done
 sprint: '0'
 depends_on: []
+completed_at: '2026-05-13T08:40:39.085533'
 ---
 
 # Markdown renderer + sanitizer
