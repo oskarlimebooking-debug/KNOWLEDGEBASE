@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-12 (TB.8 — Teach-Back mode shipped on `engage/phase-b`; 33 new tests / 377 total green; score-tier badge red/yellow/green; cache-revisit pattern with `{explanation, result}` payload)
+> Last updated: 2026-05-13 (TB.6 — Classic Quiz mode shipped on `engage/phase-b`; 29 new tests / 406 total green; **completes TB.4 AC #4** — all 4 reading modes now adopt withGenerationCache)
 
 ## Active Plan
 
