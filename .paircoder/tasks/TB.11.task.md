@@ -5,10 +5,11 @@ plan: plan-sprint-0-engage
 type: feature
 priority: P1
 complexity: 5
-status: in_progress
+status: done
 sprint: '0'
 depends_on:
 - TB.1
+completed_at: '2026-05-13T08:55:21.312755'
 ---
 
 # Settings UX additions
