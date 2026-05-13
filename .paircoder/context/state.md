@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-13 (TB.6 — Classic Quiz mode shipped on `engage/phase-b`; 29 new tests / 406 total green; **completes TB.4 AC #4** — all 4 reading modes now adopt withGenerationCache)
+> Last updated: 2026-05-13 (Sprint-B Navigator validation pass #4 — TB.8 status regression restored; TB.11 spec drift fixed to match the 2026-05-12 Anthropic-swap audit; 8/12 Sprint-B tasks done; remaining: TB.9 + TB.10 + TB.11 + TB.12 = 21 cx)
 
 ## Active Plan
 
@@ -66,6 +66,10 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 ```
 
 ## What Was Just Done
+
+- **Sprint B Navigator validation pass #4 (2026-05-13)** — `/pc-plan .paircoder/plans/backlogs/phase-b.md` re-invoked. Pre-flight clean (no Trello / no PM provider → `designing-and-implementing` skill path; budget fine). Backlog dry-run still: **12 tasks / 75 cx / 3 phases**. Status snapshot from task files: **8 done** (TB.1–TB.8), **4 pending** (TB.9 / TB.10 / TB.11 / TB.12 = 21 cx remaining). Two real drifts found and fixed this pass: **(a)** `TB.8.task.md` status had regressed `done` → `failed` again (same engage-lifecycle-hook regression that hit `8cc8764`; all 4 ACs ticked + `completed_at: 2026-05-12T23:31:23` still in frontmatter — pure metadata-flip, no code change). Restored status to `done` and ran `bpsai-pair task update TB.8 --resync` to bring the CLI registry in line. **(b)** `TB.11.task.md` and the matching `phase-b.md` backlog block still said "Key persists in IDB (NOT localStorage)" and "Model dropdown lists Gemini Flash + Pro tiers" — but the 2026-05-12 Anthropic-swap audit (finding P2-4) flipped key handling to memory-only via `src/data/secrets.ts`, and the provider is now Anthropic. Driver would have followed the stale AC and re-introduced IDB persistence. Updated both the task file and the backlog: description now reads "held in memory only via `src/data/secrets.ts` (NOT persisted to IDB or localStorage — locked by the 2026-05-12 Sprint-B audit, P2-4)", AC #1 now reads "API key is held in memory only via `secrets.ts` (NOT persisted to IDB or localStorage); reload clears it", AC #3 now reads "Model dropdown lists Anthropic Opus / Sonnet / Haiku tiers". **Carry-overs (non-blocking, unchanged from pass #3):** (a) task frontmatter `plan:` field still points at `plan-sprint-0-engage` (de-facto registry — owns 22 tasks = 10 TA + 12 TB); the `plan-2026-05-phase-b-ai-core` record still shows 0 linked tasks. (b) `plan-2026-05-phase-a-foundation.plan.yaml` (0 tasks) still on disk, safe to delete in cleanup. **Next coding move:** `/start-task TB.9` (Markdown renderer + sanitizer, P0, Cx 8 — independent of TB.1/TB.4; unblocks TB.10) or `/start-task TB.11` (Settings UX, P1, Cx 5 — depends only on TB.1 which is done; spec now correct). TB.12 (error handling, P1 3cx) depends on TB.4 only and can run any time. TB.10 (format text dialog, P2 5cx) is blocked on TB.9.
+
+- **TB.8 done** (auto-updated by hook)
 
 - **TB.6 done** (auto-updated by hook)
 

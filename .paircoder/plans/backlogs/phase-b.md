@@ -133,12 +133,12 @@
 
 ### TB.11 -- Settings UX additions | Cx: 5 | P1
 
-**Description:** API key field (`type=password` + show/hide toggle). "Test connection" calls `fetchAvailableModels`. Model dropdown auto-loads when key is set. "Refresh Models" link.
+**Description:** API key field (`type=password` + show/hide toggle), held **in memory only** via `src/data/secrets.ts` (NOT persisted to IDB or localStorage — locked by the 2026-05-12 Sprint-B audit, finding P2-4). "Test connection" calls `fetchAvailableModels` against the Anthropic provider. Model dropdown auto-loads when a key is set. "Refresh Models" link re-hits the live endpoint.
 
 **AC:**
-- [ ] Key persists in IDB (NOT localStorage)
+- [ ] API key is held in memory only via `secrets.ts` (NOT persisted to IDB or localStorage); reload clears it
 - [ ] Test connection shows clear success/failure toast
-- [ ] Model dropdown lists Gemini Flash + Pro tiers
+- [ ] Model dropdown lists Anthropic Opus / Sonnet / Haiku tiers (provider swapped from Gemini in the 2026-05-12 audit)
 - [ ] Refresh Models hits the live endpoint
 
 **Depends on:** TB.1
