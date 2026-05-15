@@ -7,8 +7,14 @@
 // `src/ui/dom.ts` — no `innerHTML` anywhere in the render path.
 
 import { setChapterClickHandler, setOnBookDeleted, showBookDetail } from './ui/book-detail';
-import { setChapterNavigateHandler, showChapter } from './ui/chapter-view';
+import {
+  setChapterNavigateHandler,
+  setFormatTextLauncher,
+  setSummaryWritebackHandler,
+  showChapter,
+} from './ui/chapter-view';
 import { buildElement } from './ui/dom';
+import { openFormatTextDialog } from './ui/format-text-dialog';
 import { refreshLibrary, setBookClickHandler } from './ui/library';
 import { mountOfflineBanner } from './ui/offline-banner';
 import { openSettings } from './ui/settings';
@@ -27,7 +33,8 @@ function defaultSettingsHandler(root: HTMLElement): SettingsHandler {
   return () => {
     const stack = root.querySelector('.view-modal-stack__pane') as HTMLElement | null;
     if (!stack) return;
-    void openSettings(stack);
+    const toast = root.querySelector('.toast-container') as HTMLElement | null;
+    void openSettings(stack, document, toast ?? undefined);
   };
 }
 
@@ -77,6 +84,18 @@ export function mountApp(root: HTMLElement | null): void {
     setChapterNavigateHandler((_bookId, chapterId) => {
       setView(shell, 'chapter');
       void showChapter(chapterId, chapterPane, toastContainer);
+    });
+    setSummaryWritebackHandler(async () => {
+      // A summary writes back `chapter.difficulty`; refresh the library
+      // so the book card's averageDifficulty star row picks it up.
+      await refreshLibrary(libraryPane, toastContainer);
+    });
+    setFormatTextLauncher((chapter, onAfterFormat) => {
+      openFormatTextDialog(modalStack, {
+        currentChapter: chapter,
+        toastContainer,
+        onAfterFormat,
+      });
     });
     setOnBookDeleted(async () => {
       setView(shell, 'library');

@@ -76,7 +76,7 @@ function chapterRow(ch: Chapter, completed: boolean): ShellNode {
 }
 
 export function renderBookDetail(data: BookDetailData): ShellNode {
-  const summary = summarizeBook(data.book, data.progress);
+  const summary = summarizeBook(data.book, data.chapters, data.progress);
   const pct = Math.round(summary.progressPct * 100);
   const cover: ShellNode =
     data.book.coverDataUrl !== null

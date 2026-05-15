@@ -15,6 +15,13 @@
 // Convention: `setSetting`/`getSetting` (in db.ts) must NEVER receive a
 // credential. Route every credential through this module.
 
+// Centralised secret name for the AI provider's API key.
+// Callers MUST reference this constant — never inline the literal.
+// History: inlining caused a TB.11/TB.12 functional break where Settings
+// wrote 'anthropicApiKey' while every reading mode read 'aiApiKey',
+// leaving the user unable to authenticate any AI call (Sprint-B audit).
+export const AI_API_KEY_NAME = 'aiApiKey';
+
 const store = new Map<string, string>();
 
 function assertName(name: string): void {

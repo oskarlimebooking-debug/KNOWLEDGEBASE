@@ -22,6 +22,7 @@ function makeSummary(book: Book, completedCount = 0): BookSummary {
     completedCount,
     progressPct: book.chapterCount === 0 ? 0 : completedCount / book.chapterCount,
     nextChapterIndex: completedCount < book.chapterCount ? completedCount : null,
+    averageDifficulty: null,
   };
 }
 

@@ -8,6 +8,16 @@
 import { getSetting, setSetting } from '../data/db';
 import { downloadAsJson, exportAllData } from '../lib/export';
 import { buildElement, type ShellNode } from './dom';
+import {
+  buildPromptsSection,
+  loadAllPrompts,
+  wirePromptsSection,
+} from './settings-prompts';
+import {
+  buildProviderSection,
+  loadProviderState,
+  wireProviderSection,
+} from './settings-provider';
 
 export const WPM_MIN = 50;
 export const WPM_MAX = 1000;
@@ -147,14 +157,41 @@ function wireExport(modal: HTMLElement, doc: Document): void {
   });
 }
 
+function resolveToastContainer(
+  toastContainer: HTMLElement | undefined,
+  stack: HTMLElement,
+  doc: Document,
+): HTMLElement {
+  if (toastContainer !== undefined) return toastContainer;
+  const docWithQuery = doc as unknown as {
+    querySelector?: (sel: string) => HTMLElement | null;
+  };
+  if (typeof docWithQuery.querySelector === 'function') {
+    const found = docWithQuery.querySelector('.toast-container');
+    if (found !== null && found !== undefined) return found;
+  }
+  // Real-app callers (src/app.ts) always pass the shell's toast container
+  // explicitly. Test-stub fallback: the modal stack — toasts will mount
+  // alongside the modal rather than disappearing.
+  return stack;
+}
+
 export async function openSettings(
   stack: HTMLElement,
   doc: Document = document,
+  toastContainer?: HTMLElement,
 ): Promise<SettingsHandle> {
   const wpm = (await getSetting<number>('readingSpeed')) ?? WPM_DEFAULT;
+  const promptValues = await loadAllPrompts();
+  const providerState = await loadProviderState();
   const backdrop = doc.createElement('div');
   backdrop.className = 'modal-backdrop';
   const modal = buildModal(wpm, doc);
+  const body = modal.querySelector('.modal__body') as HTMLElement | null;
+  const providerSection = buildProviderSection(providerState, doc);
+  const promptsSection = buildPromptsSection(promptValues, doc);
+  body?.appendChild(providerSection);
+  body?.appendChild(promptsSection);
   backdrop.appendChild(modal);
   stack.appendChild(backdrop);
   stack.setAttribute('aria-hidden', 'false');
@@ -180,6 +217,8 @@ export async function openSettings(
 
   wireWpmInput(modal);
   wireExport(modal, doc);
+  wireProviderSection(providerSection, resolveToastContainer(toastContainer, stack, doc));
+  wirePromptsSection(promptsSection);
 
   return { element: modal, close };
 }

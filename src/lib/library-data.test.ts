@@ -44,15 +44,16 @@ function makeProgress(bookId: string, index: number, date: string, completed = t
 describe('summarizeBook', () => {
   it('reports 0 progress for a fresh book', () => {
     const book = makeBook('b', 3);
-    const s = summarizeBook(book, []);
+    const s = summarizeBook(book, [], []);
     expect(s.completedCount).toBe(0);
     expect(s.progressPct).toBe(0);
     expect(s.nextChapterIndex).toBe(0);
+    expect(s.averageDifficulty).toBeNull();
   });
 
   it('counts completed chapters and reports the next incomplete', () => {
     const book = makeBook('b', 4);
-    const s = summarizeBook(book, [
+    const s = summarizeBook(book, [], [
       makeProgress('b', 0, '2026-05-10'),
       makeProgress('b', 1, '2026-05-11'),
     ]);
@@ -63,7 +64,7 @@ describe('summarizeBook', () => {
 
   it('returns nextChapterIndex=null when the book is finished', () => {
     const book = makeBook('b', 2);
-    const s = summarizeBook(book, [
+    const s = summarizeBook(book, [], [
       makeProgress('b', 0, '2026-05-10'),
       makeProgress('b', 1, '2026-05-11'),
     ]);
@@ -73,7 +74,7 @@ describe('summarizeBook', () => {
 
   it('ignores progress rows from other books', () => {
     const book = makeBook('b', 2);
-    const s = summarizeBook(book, [
+    const s = summarizeBook(book, [], [
       makeProgress('a', 0, '2026-05-10'),
       makeProgress('a', 1, '2026-05-11'),
     ]);
@@ -82,8 +83,36 @@ describe('summarizeBook', () => {
 
   it('treats incomplete-flagged rows as not completed', () => {
     const book = makeBook('b', 2);
-    const s = summarizeBook(book, [makeProgress('b', 0, '2026-05-10', false)]);
+    const s = summarizeBook(book, [], [makeProgress('b', 0, '2026-05-10', false)]);
     expect(s.completedCount).toBe(0);
+  });
+
+  it('reports averageDifficulty as null when no chapter has difficulty set', () => {
+    const book = makeBook('b', 3);
+    const chapters: Chapter[] = [
+      { id: 'b_ch_0', bookId: 'b', index: 0, title: 'A', content: 'x' },
+      { id: 'b_ch_1', bookId: 'b', index: 1, title: 'B', content: 'y' },
+    ];
+    expect(summarizeBook(book, chapters, []).averageDifficulty).toBeNull();
+  });
+
+  it('averages difficulty across chapters that have it set', () => {
+    const book = makeBook('b', 3);
+    const chapters: Chapter[] = [
+      { id: 'b_ch_0', bookId: 'b', index: 0, title: 'A', content: 'x', difficulty: 4 },
+      { id: 'b_ch_1', bookId: 'b', index: 1, title: 'B', content: 'y', difficulty: 2 },
+      { id: 'b_ch_2', bookId: 'b', index: 2, title: 'C', content: 'z' },
+    ];
+    expect(summarizeBook(book, chapters, []).averageDifficulty).toBe(3);
+  });
+
+  it('scopes averageDifficulty to the target book', () => {
+    const book = makeBook('b', 2);
+    const chapters: Chapter[] = [
+      { id: 'b_ch_0', bookId: 'b', index: 0, title: 'A', content: 'x', difficulty: 5 },
+      { id: 'a_ch_0', bookId: 'a', index: 0, title: 'Z', content: 'z', difficulty: 1 },
+    ];
+    expect(summarizeBook(book, chapters, []).averageDifficulty).toBe(5);
   });
 });
 

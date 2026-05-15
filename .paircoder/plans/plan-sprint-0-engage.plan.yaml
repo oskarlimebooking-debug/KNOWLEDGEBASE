@@ -2,20 +2,22 @@ id: plan-sprint-0-engage
 phases:
 - id: 1
   tasks:
-  - TA.1
-  - TA.2
+  - TB.1
+  - TB.2
+  - TB.3
+  - TB.4
 - id: 2
   tasks:
-  - TA.3
-  - TA.4
-  - TA.5
-  - TA.6
-  - TA.7
+  - TB.5
+  - TB.6
+  - TB.7
+  - TB.8
 - id: 3
   tasks:
-  - TA.8
-  - TA.9
-  - TA.10
+  - TB.9
+  - TB.10
+  - TB.11
+  - TB.12
 status: in_progress
 title: Sprint 0
 type: feature

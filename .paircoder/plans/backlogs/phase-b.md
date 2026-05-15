@@ -15,7 +15,7 @@
 - [ ] Hard-coded fallback model list is used when `fetchAvailableModels` errors
 - [ ] No PII leaked into error messages
 
-**Depends on:** TA.2
+**Depends on:** _(none — Sprint-A is merged)_
 
 ### TB.2 -- Prompts as data + settings UI | Cx: 5 | P0
 
@@ -27,7 +27,7 @@
 - [ ] Reset-to-default deletes the override key
 - [ ] No XSS via prompt content (rendered as `textContent`, never `innerHTML`)
 
-**Depends on:** TA.8, TA.2
+**Depends on:** _(none — Sprint-A is merged)_
 
 ### TB.3 -- Pattern-based chapter detection | Cx: 8 | P0
 
@@ -39,7 +39,7 @@
 - [ ] Fallback to word-count is silent (no console warning)
 - [ ] Unit tests with > 10 input variants
 
-**Depends on:** TB.1, TA.4
+**Depends on:** TB.1
 
 ### TB.4 -- Generation cache pattern | Cx: 5 | P0
 
@@ -51,7 +51,7 @@
 - [ ] Cache-miss observability: console log in dev mode shows hit/miss
 - [ ] Pattern adopted by all four B-modes below (verified by code review)
 
-**Depends on:** TB.1, TA.2
+**Depends on:** TB.1
 
 ### Phase 2: The four basic modes
 
@@ -117,7 +117,7 @@
 - [ ] Vitest test suite covers every renderer rule
 - [ ] Links open in new tab with noopener
 
-**Depends on:** TA.7
+**Depends on:** _(none — Sprint-A is merged)_
 
 ### TB.10 -- Format Text dialog | Cx: 5 | P2
 
@@ -133,15 +133,15 @@
 
 ### TB.11 -- Settings UX additions | Cx: 5 | P1
 
-**Description:** API key field (`type=password` + show/hide toggle). "Test connection" calls `fetchAvailableModels`. Model dropdown auto-loads when key is set. "Refresh Models" link.
+**Description:** API key field (`type=password` + show/hide toggle), held **in memory only** via `src/data/secrets.ts` (NOT persisted to IDB or localStorage — locked by the 2026-05-12 Sprint-B audit, finding P2-4). "Test connection" calls `fetchAvailableModels` against the Anthropic provider. Model dropdown auto-loads when a key is set. "Refresh Models" link re-hits the live endpoint.
 
 **AC:**
-- [ ] Key persists in IDB (NOT localStorage)
+- [ ] API key is held in memory only via `secrets.ts` (NOT persisted to IDB or localStorage); reload clears it
 - [ ] Test connection shows clear success/failure toast
-- [ ] Model dropdown lists Gemini Flash + Pro tiers
+- [ ] Model dropdown lists Anthropic Opus / Sonnet / Haiku tiers (provider swapped from Gemini in the 2026-05-12 audit)
 - [ ] Refresh Models hits the live endpoint
 
-**Depends on:** TA.8, TB.1
+**Depends on:** TB.1
 
 ### TB.12 -- Error handling (toast + retry) | Cx: 3 | P1
 
