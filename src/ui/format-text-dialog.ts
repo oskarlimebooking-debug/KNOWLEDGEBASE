@@ -216,6 +216,7 @@ export function openFormatTextDialog(
       return;
     }
     lock();
+    showStatus(inlineLoading('Loading chapters…'));
     void runFormatAll(opts.currentChapter.bookId, apiKey, showStatus).then(
       async (result) => {
         unlock();

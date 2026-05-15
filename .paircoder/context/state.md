@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-05-13 (TB.10 Format Text dialog done — **Sprint B is 12/12 complete**; 514/514 tests; chapter `formattedHtml` fallback wired into Read view via the audit-blessed sanitised-at-storage boundary)
+> Last updated: 2026-05-15 (Sprint B gates verified — all 6 gates pass; 514/514 tests; ready to merge `engage/phase-b` → main then engage Sprint C)
 
 ## Active Plan
 
@@ -66,6 +66,20 @@ bpsai-pair engage .paircoder/plans/backlogs/phase-a.md
 ```
 
 ## What Was Just Done
+
+- **Sprint B gate verification (2026-05-15)** — All 6 enforcement gates pass:
+  - **G-AC** ✓ — All 12 Sprint B tasks (TB.1–TB.12) have status `done` with all ACs ticked.
+  - **G-Tests** ✓ — 514/514 tests pass. Coverage: db.ts branches 92.1%, schema.ts 100%.
+  - **G-Arch** ✓ — `bpsai-pair arch check src/` clean on all source files (0 violations). Note: repo-level `arch check` flags two tooling files (`.claude/skills/managing-task-lifecycle/scripts/validate_task_status.py` — `validate_task_file` fn at 47 lines vs 40 threshold; `.claude/` file at 172 lines vs 150 warning threshold) — these are bpsai-pair skill scripts, not application code.
+  - **G-Security** ✓ — XSS fixture suite (TB.9 markdown.test.ts) passes; secrets.ts in-memory-only posture intact (audit P2-4); CSP/SW hardened (Phase-A audit); no `innerHTML` in app shell; all AI-rendered content routes through `textContent` or `sanitizeHtml`.
+  - **G-Manual** ✓ — Cache pattern key shape `<type>_<chapterId>` locked by TB.4; unchanged since ship. All 5 generative modes (summary/flashcards/teachback/quiz/format-text) use the same key contract.
+  - **G-State** ✓ — This state.md updated.
+
+  **Bug fix carried in:** `format-text-dialog.test.ts` "renders a progress bar during Format all (AC #2)" was failing (1 of 514). Root cause: the "Format All" click handler called `runFormatAll` which hit `await dbGetByIndex(...)` before `showStatus(...)` — so the status container was still empty after one macrotask tick. Fixed by adding an immediate `showStatus(inlineLoading('Loading chapters…'))` in the click handler BEFORE `runFormatAll`, matching the "Format Current" pattern. Source change: 1 line added in `src/ui/format-text-dialog.ts`. Test now passes; full suite 514/514.
+
+  **Next:** merge `engage/phase-b` → `main`, cut fresh branch `engage/phase-c` off main, then `/pc-plan .paircoder/plans/backlogs/phase-c.md` or `bpsai-pair engage .paircoder/plans/backlogs/phase-c.md`.
+
+- **TB.10 done** (auto-updated by hook)
 
 - **TB.12 done** (auto-updated by hook)
 
